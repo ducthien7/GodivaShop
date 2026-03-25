@@ -1,4 +1,5 @@
 ﻿using MailKit.Net.Smtp;
+using MailKit.Security;
 using MimeKit;
 
 namespace GodivaShop.Web.Services;
@@ -34,10 +35,25 @@ public class EmailService
         };
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(_config["Email:Host"], int.Parse(_config["Email:Port"]!), false);
-        await client.AuthenticateAsync(_config["Email:Username"], _config["Email:Password"]);
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+        try
+        {
+            // If email credentials are not configured, skip sending
+            var username = _config["Email:Username"];
+            var password = _config["Email:Password"];
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+                return;
+
+            // Use STARTTLS on port 587 which is recommended for Gmail
+            await client.ConnectAsync(_config["Email:Host"], int.Parse(_config["Email:Port"]!), SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(username, password);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+        }
+        catch
+        {
+            // Swallow exceptions so order flow isn't blocked by email failures.
+            // For production add ILogger and proper error handling.
+        }
     }
 
     public async Task SendOrderStatusUpdateAsync(string toEmail, string toName, int orderId, string status)
@@ -59,9 +75,17 @@ public class EmailService
         };
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(_config["Email:Host"], int.Parse(_config["Email:Port"]!), false);
-        await client.AuthenticateAsync(_config["Email:Username"], _config["Email:Password"]);
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+        try
+        {
+            await client.ConnectAsync(_config["Email:Host"], int.Parse(_config["Email:Port"]!), SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(_config["Email:Username"], _config["Email:Password"]);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+        }
+        catch (Exception ex)
+        {
+            // Log and swallow exceptions so order placement isn't blocked by email failures
+            // In a real app inject ILogger<EmailService> and log here. For now just ignore.
+        }
     }
 }

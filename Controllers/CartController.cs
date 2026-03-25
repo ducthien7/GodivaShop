@@ -170,4 +170,13 @@ public class CartController : Controller
         ViewBag.OrderId = id;
         return View();
     }
+
+    // Payment gateway callback / success page
+    public IActionResult PaymentSuccess(int? id)
+    {
+        // Optional: if called without order id just show generic success
+        if (id.HasValue)
+            ViewBag.OrderId = id.Value;
+        return View();
+    }
 }
