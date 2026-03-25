@@ -1,1 +1,280 @@
-﻿Index
+﻿@model IEnumerable<GodivaShop.Web.Models.Domain.Product>
+@{
+    ViewData["Title"] = "Godiva - Chocolate Sang Trọng";
+}
+
+@section Styles {
+    <style>
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            height: 90vh;
+            overflow: hidden;
+            animation: heroFadeIn 1.2s ease;
+        }
+        @@keyframes heroFadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        .hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.38);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fff;
+            padding: 2rem;
+        }
+        .hero-eyebrow {
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 1rem;
+        }
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            letter-spacing: 3px;
+            margin-bottom: 1.2rem;
+            line-height: 1.1;
+        }
+        .hero-sub {
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 2.5rem;
+            opacity: 0.85;
+        }
+
+        /* ===== SECTION HEADER ===== */
+        .section-eyebrow {
+            font-size: 0.68rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--gold);
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #1a1a1a;
+        }
+
+        /* ===== PRODUCT CARD ===== */
+        .product-card {
+            border: none;
+            border-radius: 0;
+            overflow: hidden;
+            transition: box-shadow 0.3s;
+            background: #fff;
+        }
+        .product-card:hover {
+            box-shadow: 0 12px 35px rgba(193,163,94,0.18);
+        }
+        .product-card .img-wrap {
+            overflow: hidden;
+            height: 280px;
+            position: relative;
+            background: #f5f0e8;
+        }
+        .product-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.55s ease;
+        }
+        .product-card:hover img {
+            transform: scale(1.08);
+        }
+        .hover-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 1.2rem;
+            transition: background 0.3s;
+        }
+        .product-card:hover .hover-overlay {
+            background: rgba(0,0,0,0.15);
+        }
+        .hover-overlay .btn-detail {
+            transform: translateY(15px);
+            opacity: 0;
+            transition: all 0.3s;
+            background: var(--gold);
+            color: #fff;
+            border: none;
+            border-radius: 0;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 10px 28px;
+            text-decoration: none;
+        }
+        .product-card:hover .hover-overlay .btn-detail {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .badge-bestseller {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--gold);
+            color: #fff;
+            font-size: 0.6rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            font-weight: 400;
+        }
+        .card-body {
+            padding: 1.2rem 1rem;
+            text-align: center;
+        }
+        .card-category {
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .card-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.95rem;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+        .card-price {
+            color: var(--gold);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* ===== BANNER CTA ===== */
+        .cta-banner {
+            background: var(--dark);
+            padding: 5rem 0;
+            text-align: center;
+            color: #fff;
+        }
+        .cta-banner h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+    </style>
+}
+
+<!-- ===== HERO BANNER ===== -->
+<div class="hero">
+    <img src="https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=1600&q=80"
+         class="hero-img" alt="Godiva Chocolate"
+         onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=1600'">
+    <div class="hero-overlay">
+        <p class="hero-eyebrow">Bộ Sưu Tập Mới 2025</p>
+        <h1 class="hero-title">The Art of<br>Chocolate</h1>
+        <p class="hero-sub">Tinh hoa từ hơn 95 năm kinh nghiệm</p>
+        <a asp-controller="Product" asp-action="Category"
+           class="btn btn-gold px-5 py-3"
+           style="letter-spacing:2.5px; text-transform:uppercase; font-size:0.82rem;">
+            Khám Phá Ngay
+        </a>
+    </div>
+</div>
+
+<!-- ===== SẢN PHẨM NỔI BẬT ===== -->
+<section style="padding: 5rem 0; background:#fff;">
+    <div class="container">
+        <p class="section-eyebrow">Được Yêu Thích Nhất</p>
+        <h2 class="section-title">Sản Phẩm Nổi Bật</h2>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fa fa-box-open fa-3x mb-3" style="color:#e0d5c5;"></i>
+                <p class="text-muted">Chưa có sản phẩm nào. Vui lòng thêm sản phẩm trong Admin.</p>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-area="Admin" asp-controller="Product" asp-action="Create"
+                       class="btn btn-gold px-4 mt-2">+ Thêm Sản Phẩm</a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var product in Model)
+                {
+                    var mainImg = product.Images.FirstOrDefault(i => i.IsMain)?.ImagePath
+                    ?? product.Images.FirstOrDefault()?.ImagePath;
+                    var imgSrc = mainImg != null
+                    ? Url.Content(mainImg)
+                    : "https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=400";
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="card product-card h-100">
+                            <div class="img-wrap">
+                                <img src="@imgSrc" alt="@product.Name"
+                                     onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=400'">
+                                @if (product.IsBestSeller)
+                                {
+                                    <span class="badge-bestseller">Best Seller</span>
+                                }
+                                <div class="hover-overlay">
+                                    <a asp-controller="Product" asp-action="Detail"
+                                       asp-route-id="@product.Id" class="btn-detail">
+                                        Xem Chi Tiết
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-category">@product.Category?.Name</p>
+                                <h6 class="card-name">@product.Name</h6>
+                                <p class="card-price mb-0">@product.BasePrice.ToString("N0") VNĐ</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="text-center mt-5">
+                <a asp-controller="Product" asp-action="Category"
+                   class="btn btn-outline-gold px-5 py-3"
+                   style="letter-spacing:2px; text-transform:uppercase; font-size:0.8rem;">
+                    Xem Tất Cả Sản Phẩm
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ===== CTA BANNER ===== -->
+<div class="cta-banner">
+    <div class="container">
+        <h2>Quà Tặng Hoàn Hảo</h2>
+        <p style="color:#999; letter-spacing:2px; text-transform:uppercase; font-size:0.8rem; margin-bottom:2rem;">
+            Cho mọi dịp đặc biệt trong cuộc sống
+        </p>
+        <a asp-controller="Product" asp-action="Category"
+           class="btn btn-gold px-5 py-3"
+           style="letter-spacing:2px; text-transform:uppercase; font-size:0.8rem;">
+            Mua Quà Ngay
+        </a>
+    </div>
+</div>

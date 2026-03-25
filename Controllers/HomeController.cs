@@ -1,3 +1,4 @@
+// Controllers/HomeController.cs
 using GodivaShop.Web.Data;
 using GodivaShop.Web.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -19,13 +20,16 @@ public class HomeController : Controller
     public async Task<IActionResult> Index()
     {
         ViewBag.CartCount = _cart.GetCartCount();
+
         var featured = await _db.Products
             .Include(p => p.Images)
             .Include(p => p.Category)
             .Where(p => p.IsActive)
             .OrderByDescending(p => p.IsBestSeller)
+            .ThenByDescending(p => p.CreatedAt)
             .Take(8)
             .ToListAsync();
+
         return View(featured);
     }
 }

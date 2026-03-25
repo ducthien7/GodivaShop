@@ -1,200 +1,460 @@
-﻿@{ ViewData["Title"] = "Dashboard"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
-
-@section Styles {
-<style>
-    .chart-box { background: #fff; padding: 1.5rem; height: 300px; }
-    .recent-table td { font-size: 0.82rem; }
-</style>
+﻿@{
+    Layout = null;
 }
-
-<!-- STAT CARDS -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="stat-num">@ViewBag.TotalOrders</div>
-                    <div class="stat-label">Tổng Đơn Hàng</div>
-                </div>
-                <i class="fa fa-shopping-bag" style="font-size:1.5rem; color:#e0d5c5;"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="stat-num">@(((decimal)ViewBag.TotalRevenue).ToString("N0"))đ</div>
-                    <div class="stat-label">Tổng Doanh Thu</div>
-                </div>
-                <i class="fa fa-coins" style="font-size:1.5rem; color:#e0d5c5;"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="stat-num">@ViewBag.GuestOrders</div>
-                    <div class="stat-label">Khách Vãng Lai</div>
-                </div>
-                <i class="fa fa-user-secret" style="font-size:1.5rem; color:#e0d5c5;"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="stat-num">@ViewBag.MemberOrders</div>
-                    <div class="stat-label">Khách Thành Viên</div>
-                </div>
-                <i class="fa fa-user-check" style="font-size:1.5rem; color:#e0d5c5;"></i>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-3 mb-4">
-    <!-- BIỂU ĐỒ DONUT -->
-    <div class="col-md-4">
-        <div class="chart-box">
-            <p class="small text-uppercase mb-3" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Phân Loại Khách Hàng</p>
-            <canvas id="customerChart"></canvas>
-        </div>
-    </div>
-    <!-- BIỂU ĐỒ TRẠNG THÁI ĐƠN HÀNG -->
-    <div class="col-md-8">
-        <div class="chart-box">
-            <p class="small text-uppercase mb-3" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Trạng Thái Đơn Hàng</p>
-            <canvas id="statusChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- NOTIFICATIONS REAL-TIME -->
-<div class="row g-3 mb-4">
-    <div class="col-12">
-        <div style="background:#fff; padding:1.5rem;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <p class="small text-uppercase mb-0" style="letter-spacing:2px; color:#999; font-size:0.7rem;">
-                    <i class="fa fa-circle text-success me-1" style="font-size:0.5rem;"></i>
-                    Đơn Hàng Mới (Real-time)
-                </p>
-                <button onclick="$('#liveOrders').empty()" class="btn btn-sm btn-admin-outline">Xóa tất cả</button>
-            </div>
-            <div id="liveOrders">
-                <p class="text-muted small text-center py-3">Đang chờ đơn hàng mới...</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ĐƠN HÀNG GẦN ĐÂY -->
-<div style="background:#fff; padding:1.5rem;">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <p class="small text-uppercase mb-0" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Đơn Hàng Gần Đây</p>
-        <a asp-area="Admin" asp-controller="Order" asp-action="Index" class="text-gold small text-decoration-none">
-            Xem tất cả →
-        </a>
-    </div>
-    @if (ViewBag.RecentOrders != null)
-    {
-        <table class="table admin-table recent-table mb-0">
-            <thead>
-                <tr>
-                    <th>#ID</th>
-                    <th>Khách Hàng</th>
-                    <th>Loại</th>
-                    <th>Số Tiền</th>
-                    <th>Trạng Thái</th>
-                    <th>Ngày</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var order in (IEnumerable<dynamic>)ViewBag.RecentOrders)
-                {
-                    <tr>
-                        <td class="text-gold">#@order.Id</td>
-                        <td>@order.GuestFullName</td>
-                        <td>
-                            @if (order.UserId == null)
-                            {
-                                <span class="badge" style="background:#f0ebe0; color:#C1A35E; font-size:0.65rem;">Vãng Lai</span>
-                            }
-                            else
-                            {
-                                <span class="badge" style="background:#e8f0e8; color:#2d6a2d; font-size:0.65rem;">Thành Viên</span>
-                            }
-                        </td>
-                        <td class="text-gold">@(((decimal)order.TotalAmount).ToString("N0"))đ</td>
-                        <td><span class="badge-status badge-@order.Status.ToString().ToLower()">@order.Status</span></td>
-                        <td class="text-muted">@(((DateTime)order.OrderDate).ToString("dd/MM/yyyy HH:mm"))</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</div>
-
-@section Scripts {
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Biểu đồ Donut Khách hàng
-    new Chart(document.getElementById('customerChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Khách Vãng Lai', 'Thành Viên'],
-            datasets: [{
-                data: [@ViewBag.GuestOrders, @ViewBag.MemberOrders],
-                backgroundColor: ['#C1A35E', '#1a1a1a'],
-                borderWidth: 0
-            }]
-        },
-        options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }, cutout: '65%' }
-    });
-
-    // Biểu đồ trạng thái
-    new Chart(document.getElementById('statusChart'), {
-        type: 'bar',
-        data: {
-            labels: ['Chờ xử lý', 'Xác nhận', 'Đang xử lý', 'Đang giao', 'Đã giao', 'Hủy'],
-            datasets: [{
-                label: 'Đơn hàng',
-                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.StatusCounts ?? new int[]{0,0,0,0,0,0})),
-                backgroundColor: ['#C1A35E','#4a90d9','#7b68ee','#2ecc71','#27ae60','#e74c3c'],
-                borderWidth: 0,
-                borderRadius: 2
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: '#f5f5f5' } }, x: { grid: { display: false } } }
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — @ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #C1A35E;
+            --sidebar-w: 240px;
+            --dark: #1a1a1a;
         }
-    });
 
-    // Live Orders SignalR
-    const conn = new signalR.HubConnectionBuilder().withUrl("/orderHub").build();
-    conn.on("NewOrder", function(order) {
-        const badge = order.isGuest
-            ? '<span class="badge" style="background:#f0ebe0;color:#C1A35E;font-size:0.65rem;">Vãng Lai</span>'
-            : '<span class="badge" style="background:#e8f0e8;color:#2d6a2d;font-size:0.65rem;">Thành Viên</span>';
-        const html = `
-            <div style="padding:10px 12px; border-left:3px solid var(--gold); background:#faf8f5; margin-bottom:8px; animation:slideIn 0.4s ease;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong class="text-gold">#${order.orderId}</strong>
-                        <strong class="ms-2">${order.customerName}</strong> ${badge}
-                        <span class="ms-2 text-gold">${order.amount.toLocaleString('vi-VN')}đ</span>
-                    </div>
-                    <small class="text-muted">${new Date().toLocaleTimeString('vi-VN')}</small>
+        body {
+            font-family: 'Lato', sans-serif;
+            background: #f4f3f1;
+            margin: 0;
+        }
+
+        .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .text-gold {
+            color: var(--gold) !important;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-w);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: var(--dark);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: var(--gold);
+            letter-spacing: 3px;
+        }
+
+            .sidebar-brand small {
+                display: block;
+                font-size: 0.55rem;
+                color: #888;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                margin-top: 4px;
+            }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            padding: 1rem 1.2rem 0.3rem;
+            font-size: 0.6rem;
+            color: #666;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .sidebar-nav .nav-link {
+            padding: 10px 1.5rem;
+            font-size: 0.8rem;
+            color: #bbb;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+        }
+
+            .sidebar-nav .nav-link:hover,
+            .sidebar-nav .nav-link.active {
+                color: #fff;
+                border-left-color: var(--gold);
+                background: rgba(193,163,94,0.08);
+            }
+
+            .sidebar-nav .nav-link i {
+                width: 16px;
+                text-align: center;
+            }
+
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #333;
+        }
+
+            .sidebar-footer a {
+                font-size: 0.75rem;
+                color: #888;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .sidebar-footer a:hover {
+                    color: var(--gold);
+                }
+
+        /* MAIN */
+        .admin-main {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+        }
+
+        .admin-topbar {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+            .admin-topbar .page-title {
+                font-size: 0.85rem;
+                font-weight: 700;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                color: #333;
+            }
+
+        .admin-content {
+            padding: 2rem;
+        }
+
+        /* CARDS */
+        .stat-card {
+            background: #fff;
+            border: none;
+            border-radius: 0;
+            padding: 1.5rem;
+            border-left: 3px solid var(--gold);
+        }
+
+            .stat-card .stat-num {
+                font-family: 'Playfair Display', serif;
+                font-size: 2rem;
+                color: var(--gold);
+                line-height: 1;
+            }
+
+            .stat-card .stat-label {
+                font-size: 0.7rem;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                color: #999;
+                margin-top: 4px;
+            }
+
+        /* TABLE */
+        .admin-table {
+            background: #fff;
+        }
+
+            .admin-table thead th {
+                background: var(--dark);
+                color: #fff;
+                font-size: 0.7rem;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                font-weight: 400;
+                padding: 1rem;
+                border: none;
+            }
+
+            .admin-table tbody td {
+                font-size: 0.85rem;
+                padding: 0.85rem 1rem;
+                border-color: #f0ede8;
+                vertical-align: middle;
+            }
+
+            .admin-table tbody tr:hover td {
+                background: #faf8f5;
+            }
+
+        /* BADGE STATUS */
+        .badge-status {
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-confirmed {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .badge-shipped {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-delivered {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-processing {
+            background: #e2d9f3;
+            color: #432874;
+        }
+
+        /* FORM */
+        .admin-form-control {
+            border-radius: 0;
+            border: 1px solid #ddd;
+            font-size: 0.875rem;
+        }
+
+            .admin-form-control:focus {
+                border-color: var(--gold);
+                box-shadow: 0 0 0 2px rgba(193,163,94,0.15);
+            }
+
+        .btn-admin-gold {
+            background: var(--gold);
+            color: #fff;
+            border: none;
+            border-radius: 0;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 8px 20px;
+        }
+
+            .btn-admin-gold:hover {
+                background: #d4b97a;
+                color: #fff;
+            }
+
+        .btn-admin-outline {
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            background: transparent;
+            border-radius: 0;
+            font-size: 0.8rem;
+            padding: 6px 16px;
+        }
+
+            .btn-admin-outline:hover {
+                background: var(--gold);
+                color: #fff;
+            }
+
+        /* NOTIFICATION */
+        #notifDropdown {
+            position: absolute;
+            right: 0;
+            top: 130%;
+            width: 320px;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            z-index: 9999;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+            #notifDropdown .notif-item {
+                padding: 12px 16px;
+                border-bottom: 1px solid #f5f5f5;
+                font-size: 0.8rem;
+            }
+
+                #notifDropdown .notif-item:hover {
+                    background: #faf8f5;
+                }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            GODIVA
+            <small>Admin Panel</small>
+        </div>
+        <nav class="sidebar-nav">
+            <p class="nav-section">Tổng Quan</p>
+            <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                <i class="fa fa-chart-bar"></i> Dashboard
+            </a>
+
+            <p class="nav-section">Quản Lý</p>
+            <a asp-area="Admin" asp-controller="Order" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active" : "")">
+                <i class="fa fa-shopping-bag"></i> Đơn Hàng
+            </a>
+            <a asp-area="Admin" asp-controller="Product" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">
+                <i class="fa fa-box"></i> Sản Phẩm
+            </a>
+            <a asp-area="Admin" asp-controller="Category" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")">
+                <i class="fa fa-tags"></i> Danh Mục
+            </a>
+            <a asp-area="Admin" asp-controller="Coupon" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Coupon" ? "active" : "")">
+                <i class="fa fa-ticket-alt"></i> Mã Giảm Giá
+            </a>
+
+            <p class="nav-section">Người Dùng</p>
+            <a asp-area="Admin" asp-controller="User" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")">
+                <i class="fa fa-users"></i> Tài Khoản
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/" target="_blank">
+                <i class="fa fa-external-link-alt"></i> Xem Website
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="admin-main">
+        <div class="admin-topbar">
+            <span class="page-title">@ViewData["Title"]</span>
+            <div class="d-flex align-items-center gap-3">
+                <!-- NOTIFICATION BELL -->
+                <div class="position-relative" id="notifBell" onclick="toggleNotif()">
+                    <i class="fa fa-bell" style="font-size:1rem; color:#555; cursor:pointer;"></i>
+                    <span id="notifCount"
+                          style="display:none; position:absolute; top:-6px; right:-8px;
+                             background:#e74c3c; color:#fff; font-size:0.6rem;
+                             width:16px; height:16px; border-radius:50%;
+                             display:none; align-items:center; justify-content:center;">
+                        0
+                    </span>
                 </div>
-            </div>`;
-        if ($('#liveOrders p').length) $('#liveOrders').empty();
-        $('#liveOrders').prepend(html);
-    });
-    conn.start().then(() => conn.invoke("JoinAdminGroup")).catch(console.error);
-</script>
-<style>@@keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }</style>
-}
+                <div id="notifDropdown" style="display:none;" class="position-absolute">
+                    <div style="padding:10px 16px; border-bottom:1px solid #eee;
+                            font-size:0.7rem; letter-spacing:1px;
+                            text-transform:uppercase; color:#999;">
+                        Đơn Hàng Mới
+                    </div>
+                    <div id="notifList">
+                        <p class="text-muted small text-center p-3 mb-0">Chưa có thông báo</p>
+                    </div>
+                </div>
+
+                <!-- USER -->
+                <div class="dropdown">
+                    <span class="small text-muted"
+                          style="cursor:pointer;" data-bs-toggle="dropdown">
+                        <i class="fa fa-user-circle me-1"></i>
+                        @User.Identity?.Name
+                    </span>
+                    <ul class="dropdown-menu dropdown-menu-end"
+                        style="border-radius:0; font-size:0.8rem;">
+                        <li>
+                            <form action="/Identity/Account/Logout" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fa fa-sign-out-alt me-2"></i>Đăng Xuất
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-content">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.microsoft.com/ajax/signalr/latest/dist/browser/signalr.min.js"></script>
+    <script>
+        // SignalR
+        let notifCount = 0;
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/orderHub").build();
+
+        connection.on("NewOrder", function (order) {
+            notifCount++;
+            const badge = order.isGuest
+                ? '<span class="badge bg-secondary" style="font-size:0.6rem;">Guest</span>'
+                : '<span class="badge bg-success" style="font-size:0.6rem;">Member</span>';
+            const item = `
+                    <div class="notif-item">
+                        <strong>#${order.orderId}</strong> — ${order.customerName} ${badge}
+                        <br><span style="color:var(--gold);">
+                            ${order.amount.toLocaleString('vi-VN')}đ
+                        </span>
+                        <small class="text-muted float-end">
+                            ${new Date().toLocaleTimeString('vi-VN')}
+                        </small>
+                    </div>`;
+            if ($('#notifList p').length) $('#notifList').empty();
+            $('#notifList').prepend(item);
+            $('#notifCount').text(notifCount).css('display', 'flex');
+        });
+
+        connection.start()
+            .then(() => connection.invoke("JoinAdminGroup"))
+            .catch(err => console.error('SignalR:', err));
+
+        function toggleNotif() {
+            const d = $('#notifDropdown');
+            d.toggle();
+            if (d.is(':visible')) {
+                notifCount = 0;
+                $('#notifCount').hide();
+            }
+        }
+        $(document).click(function (e) {
+            if (!$(e.target).closest('#notifBell, #notifDropdown').length)
+                $('#notifDropdown').hide();
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

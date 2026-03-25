@@ -24,7 +24,6 @@ public class LoginModel : PageModel
 
     public IList<AuthenticationScheme>? ExternalLogins { get; set; }
     public string? ReturnUrl { get; set; }
-    public string? ErrorMessage { get; set; }
 
     public class InputModel
     {
@@ -42,10 +41,8 @@ public class LoginModel : PageModel
 
     public async Task OnGetAsync(string? returnUrl = null)
     {
-        if (!string.IsNullOrEmpty(ErrorMessage))
-            ModelState.AddModelError(string.Empty, ErrorMessage);
-
-        ReturnUrl = returnUrl ?? Url.Content("~/");
+        // KHÔNG dùng returnUrl từ Identity — tự set về trang chủ
+        ReturnUrl = "/";
         await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         ExternalLogins = (await _signInManager
             .GetExternalAuthenticationSchemesAsync()).ToList();
@@ -53,7 +50,6 @@ public class LoginModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        returnUrl ??= Url.Content("~/");
         ExternalLogins = (await _signInManager
             .GetExternalAuthenticationSchemesAsync()).ToList();
 
@@ -65,20 +61,26 @@ public class LoginModel : PageModel
 
         if (result.Succeeded)
         {
-            // Nếu là Admin/Staff → redirect sang Admin
             var user = await _userManager.FindByEmailAsync(Input.Email);
             if (user != null)
             {
                 var roles = await _userManager.GetRolesAsync(user);
+
+                // Admin/Staff → Admin Dashboard
                 if (roles.Contains("Admin") || roles.Contains("Staff"))
-                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+                {
+                    // Dùng Redirect tuyệt đối, không dùng RedirectToAction
+                    return Redirect("/Admin/Dashboard");
+                }
             }
-            return LocalRedirect(returnUrl);
+
+            // Customer → Trang chủ
+            return Redirect("/");
         }
 
         if (result.IsLockedOut)
         {
-            ModelState.AddModelError(string.Empty, "Tài khoản bị khóa. Thử lại sau.");
+            ModelState.AddModelError(string.Empty, "Tài khoản bị khóa.");
             return Page();
         }
 
