@@ -1,0 +1,122 @@
+﻿@model GodivaShop.Web.Models.Domain.Product
+@{
+    ViewData["Title"] = "Thêm Sản Phẩm Mới"; Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div style="background:#fff; padding:2rem;">
+            <form asp-area="Admin" asp-controller="Product" asp-action="Create"
+                  method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Tên Sản Phẩm *</label>
+                        <input asp-for="Name" class="form-control admin-form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Danh Mục *</label>
+                        <select asp-for="CategoryId" class="form-select admin-form-control" required>
+                            <option value="">-- Chọn danh mục --</option>
+                            @foreach (var cat in (IEnumerable<GodivaShop.Web.Models.Domain.Category>)ViewBag.Categories)
+                            {
+                                <option value="@cat.Id">@cat.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Giá Gốc (VNĐ) *</label>
+                        <input asp-for="BasePrice" type="number" class="form-control admin-form-control" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Mô Tả</label>
+                        <textarea asp-for="Description" class="form-control admin-form-control" rows="4"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mt-2">
+                            <input asp-for="IsBestSeller" class="form-check-input" type="checkbox">
+                            <label class="form-check-label small">Best Seller</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mt-2">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
+                            <label class="form-check-label small">Hiển thị trên website</label>
+                        </div>
+                    </div>
+
+                    <!-- UPLOAD ẢNH -->
+                    <div class="col-12">
+                        <label class="small text-uppercase mb-2" style="letter-spacing:1px;">Ảnh Sản Phẩm</label>
+                        <div id="dropZone" style="border:2px dashed #ddd; padding:2rem; text-align:center; cursor:pointer; transition:border-color 0.2s;" onclick="$('#imageUpload').click()">
+                            <i class="fa fa-cloud-upload-alt fa-2x mb-2 text-muted"></i>
+                            <p class="text-muted small mb-0">Click hoặc kéo thả ảnh vào đây</p>
+                            <p class="text-muted" style="font-size:0.7rem;">(Ảnh đầu tiên sẽ là ảnh chính)</p>
+                        </div>
+                        <input type="file" id="imageUpload" name="images" multiple accept="image/*" style="display:none" onchange="previewImages(this)">
+                        <div id="imagePreview" class="d-flex gap-2 flex-wrap mt-2"></div>
+                    </div>
+
+                    <!-- BIẾN THỂ (sẽ thêm sau khi tạo xong) -->
+                    <div class="col-12">
+                        <hr>
+                        <p class="small text-muted">💡 Sau khi tạo sản phẩm, bạn có thể thêm biến thể (size/số lượng) trong trang chỉnh sửa.</p>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-admin-gold px-5">
+                        <i class="fa fa-save me-2"></i>Lưu Sản Phẩm
+                    </button>
+                    <a asp-area="Admin" asp-controller="Product" asp-action="Index"
+                       class="btn btn-admin-outline px-4">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- HƯỚNG DẪN -->
+    <div class="col-md-4">
+        <div style="background:#faf8f5; padding:1.5rem;">
+            <p class="small text-uppercase mb-3" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Lưu Ý</p>
+            <ul class="small text-muted ps-3">
+                <li class="mb-2">Ảnh đầu tiên sẽ tự động là ảnh chính hiển thị</li>
+                <li class="mb-2">Nên tải lên ít nhất 3-5 ảnh chất lượng cao</li>
+                <li class="mb-2">Tỷ lệ ảnh khuyến nghị: 1:1 hoặc 4:3</li>
+                <li class="mb-2">Biến thể sản phẩm (size, giá) sẽ thêm sau khi tạo</li>
+                <li>Dung lượng tối đa mỗi ảnh: 5MB</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImages(input) {
+            const preview = $('#imagePreview');
+            preview.empty();
+            Array.from(input.files).forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.append(`
+                        <div style="position:relative;">
+                            <img src="${e.target.result}" style="width:80px; height:80px; object-fit:cover; border:2px solid ${idx === 0 ? 'var(--gold)' : '#ddd'};">
+                            ${idx === 0 ? '<span style="position:absolute; top:0; left:0; background:var(--gold); color:#fff; font-size:0.55rem; padding:2px 4px;">MAIN</span>' : ''}
+                        </div>`);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Drag & drop
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--gold)'; });
+        dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#ddd'; });
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ddd';
+            document.getElementById('imageUpload').files = e.dataTransfer.files;
+            previewImages(document.getElementById('imageUpload'));
+        });
+    </script>
+}

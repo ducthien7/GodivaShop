@@ -1,0 +1,200 @@
+﻿@{ ViewData["Title"] = "Dashboard"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+
+@section Styles {
+<style>
+    .chart-box { background: #fff; padding: 1.5rem; height: 300px; }
+    .recent-table td { font-size: 0.82rem; }
+</style>
+}
+
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-num">@ViewBag.TotalOrders</div>
+                    <div class="stat-label">Tổng Đơn Hàng</div>
+                </div>
+                <i class="fa fa-shopping-bag" style="font-size:1.5rem; color:#e0d5c5;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-num">@(((decimal)ViewBag.TotalRevenue).ToString("N0"))đ</div>
+                    <div class="stat-label">Tổng Doanh Thu</div>
+                </div>
+                <i class="fa fa-coins" style="font-size:1.5rem; color:#e0d5c5;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-num">@ViewBag.GuestOrders</div>
+                    <div class="stat-label">Khách Vãng Lai</div>
+                </div>
+                <i class="fa fa-user-secret" style="font-size:1.5rem; color:#e0d5c5;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-num">@ViewBag.MemberOrders</div>
+                    <div class="stat-label">Khách Thành Viên</div>
+                </div>
+                <i class="fa fa-user-check" style="font-size:1.5rem; color:#e0d5c5;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- BIỂU ĐỒ DONUT -->
+    <div class="col-md-4">
+        <div class="chart-box">
+            <p class="small text-uppercase mb-3" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Phân Loại Khách Hàng</p>
+            <canvas id="customerChart"></canvas>
+        </div>
+    </div>
+    <!-- BIỂU ĐỒ TRẠNG THÁI ĐƠN HÀNG -->
+    <div class="col-md-8">
+        <div class="chart-box">
+            <p class="small text-uppercase mb-3" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Trạng Thái Đơn Hàng</p>
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICATIONS REAL-TIME -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div style="background:#fff; padding:1.5rem;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <p class="small text-uppercase mb-0" style="letter-spacing:2px; color:#999; font-size:0.7rem;">
+                    <i class="fa fa-circle text-success me-1" style="font-size:0.5rem;"></i>
+                    Đơn Hàng Mới (Real-time)
+                </p>
+                <button onclick="$('#liveOrders').empty()" class="btn btn-sm btn-admin-outline">Xóa tất cả</button>
+            </div>
+            <div id="liveOrders">
+                <p class="text-muted small text-center py-3">Đang chờ đơn hàng mới...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ĐƠN HÀNG GẦN ĐÂY -->
+<div style="background:#fff; padding:1.5rem;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <p class="small text-uppercase mb-0" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Đơn Hàng Gần Đây</p>
+        <a asp-area="Admin" asp-controller="Order" asp-action="Index" class="text-gold small text-decoration-none">
+            Xem tất cả →
+        </a>
+    </div>
+    @if (ViewBag.RecentOrders != null)
+    {
+        <table class="table admin-table recent-table mb-0">
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Khách Hàng</th>
+                    <th>Loại</th>
+                    <th>Số Tiền</th>
+                    <th>Trạng Thái</th>
+                    <th>Ngày</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in (IEnumerable<dynamic>)ViewBag.RecentOrders)
+                {
+                    <tr>
+                        <td class="text-gold">#@order.Id</td>
+                        <td>@order.GuestFullName</td>
+                        <td>
+                            @if (order.UserId == null)
+                            {
+                                <span class="badge" style="background:#f0ebe0; color:#C1A35E; font-size:0.65rem;">Vãng Lai</span>
+                            }
+                            else
+                            {
+                                <span class="badge" style="background:#e8f0e8; color:#2d6a2d; font-size:0.65rem;">Thành Viên</span>
+                            }
+                        </td>
+                        <td class="text-gold">@(((decimal)order.TotalAmount).ToString("N0"))đ</td>
+                        <td><span class="badge-status badge-@order.Status.ToString().ToLower()">@order.Status</span></td>
+                        <td class="text-muted">@(((DateTime)order.OrderDate).ToString("dd/MM/yyyy HH:mm"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Biểu đồ Donut Khách hàng
+    new Chart(document.getElementById('customerChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Khách Vãng Lai', 'Thành Viên'],
+            datasets: [{
+                data: [@ViewBag.GuestOrders, @ViewBag.MemberOrders],
+                backgroundColor: ['#C1A35E', '#1a1a1a'],
+                borderWidth: 0
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }, cutout: '65%' }
+    });
+
+    // Biểu đồ trạng thái
+    new Chart(document.getElementById('statusChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Chờ xử lý', 'Xác nhận', 'Đang xử lý', 'Đang giao', 'Đã giao', 'Hủy'],
+            datasets: [{
+                label: 'Đơn hàng',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.StatusCounts ?? new int[]{0,0,0,0,0,0})),
+                backgroundColor: ['#C1A35E','#4a90d9','#7b68ee','#2ecc71','#27ae60','#e74c3c'],
+                borderWidth: 0,
+                borderRadius: 2
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: '#f5f5f5' } }, x: { grid: { display: false } } }
+        }
+    });
+
+    // Live Orders SignalR
+    const conn = new signalR.HubConnectionBuilder().withUrl("/orderHub").build();
+    conn.on("NewOrder", function(order) {
+        const badge = order.isGuest
+            ? '<span class="badge" style="background:#f0ebe0;color:#C1A35E;font-size:0.65rem;">Vãng Lai</span>'
+            : '<span class="badge" style="background:#e8f0e8;color:#2d6a2d;font-size:0.65rem;">Thành Viên</span>';
+        const html = `
+            <div style="padding:10px 12px; border-left:3px solid var(--gold); background:#faf8f5; margin-bottom:8px; animation:slideIn 0.4s ease;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong class="text-gold">#${order.orderId}</strong>
+                        <strong class="ms-2">${order.customerName}</strong> ${badge}
+                        <span class="ms-2 text-gold">${order.amount.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <small class="text-muted">${new Date().toLocaleTimeString('vi-VN')}</small>
+                </div>
+            </div>`;
+        if ($('#liveOrders p').length) $('#liveOrders').empty();
+        $('#liveOrders').prepend(html);
+    });
+    conn.start().then(() => conn.invoke("JoinAdminGroup")).catch(console.error);
+</script>
+<style>@@keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }</style>
+}

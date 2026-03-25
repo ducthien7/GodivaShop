@@ -1,0 +1,169 @@
+﻿@page
+@model GodivaShop.Web.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Đăng Ký";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .auth-wrapper {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #faf8f5 0%, #fff 100%);
+        }
+        .auth-card {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 3rem 2.5rem;
+            background: #fff;
+            border-top: 3px solid var(--gold);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.07);
+        }
+        .auth-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 0.3rem;
+        }
+        .auth-subtitle {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.72rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-bottom: 2.5rem;
+        }
+        .form-control {
+            border-radius: 0;
+            border: 1px solid #e0e0e0;
+            font-size: 0.875rem;
+            padding: 10px 14px;
+        }
+        .form-control:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(193,163,94,0.1);
+        }
+        .form-label {
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .password-strength { height: 3px; transition: width 0.3s, background 0.3s; }
+    </style>
+}
+
+<div class="auth-wrapper py-5">
+    <div class="auth-card">
+        <!-- LOGO -->
+        <div class="text-center mb-4">
+            <span style="font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--gold); letter-spacing:4px;">GODIVA</span>
+        </div>
+
+        <h2 class="auth-title">Tạo Tài Khoản</h2>
+        <p class="auth-subtitle">Trở thành thành viên Godiva</p>
+
+        <!-- VALIDATION ERRORS -->
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger small py-2" style="border-radius:0;"></div>
+
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+
+            <div class="row g-3">
+                <!-- HỌ TÊN -->
+                <div class="col-12">
+                    <label class="form-label">Họ và Tên *</label>
+                    <input type="text" name="FullName" class="form-control"
+                           placeholder="Nguyễn Văn A" required>
+                </div>
+
+                <!-- EMAIL -->
+                <div class="col-12">
+                    <label asp-for="Input.Email" class="form-label">Email *</label>
+                    <input asp-for="Input.Email" class="form-control"
+                           placeholder="your@email.com">
+                    <span asp-validation-for="Input.Email"
+                          class="text-danger" style="font-size:0.75rem;"></span>
+                </div>
+
+                <!-- SỐ ĐIỆN THOẠI -->
+                <div class="col-12">
+                    <label class="form-label">Số Điện Thoại</label>
+                    <input type="tel" name="Phone" class="form-control"
+                           placeholder="0912 345 678">
+                </div>
+
+                <!-- MẬT KHẨU -->
+                <div class="col-md-6">
+                    <label asp-for="Input.Password" class="form-label">Mật Khẩu *</label>
+                    <input asp-for="Input.Password" class="form-control"
+                           placeholder="••••••••" id="pwdInput"
+                           oninput="checkStrength(this.value)">
+                    <div class="mt-1" style="background:#eee; border-radius:0;">
+                        <div id="strengthBar" class="password-strength" style="width:0; background:var(--gold);"></div>
+                    </div>
+                    <span asp-validation-for="Input.Password"
+                          class="text-danger" style="font-size:0.75rem;"></span>
+                </div>
+
+                <!-- XÁC NHẬN MẬT KHẨU -->
+                <div class="col-md-6">
+                    <label asp-for="Input.ConfirmPassword" class="form-label">Xác Nhận *</label>
+                    <input asp-for="Input.ConfirmPassword" class="form-control"
+                           placeholder="••••••••">
+                    <span asp-validation-for="Input.ConfirmPassword"
+                          class="text-danger" style="font-size:0.75rem;"></span>
+                </div>
+
+                <!-- ĐỒNG Ý ĐIỀU KHOẢN -->
+                <div class="col-12">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input"
+                               id="agreeTerms" style="border-radius:0;" required>
+                        <label class="form-check-label small text-muted" for="agreeTerms">
+                            Tôi đồng ý với
+                            <a href="#" style="color:var(--gold);">điều khoản dịch vụ</a>
+                            và <a href="#" style="color:var(--gold);">chính sách bảo mật</a>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-gold w-100 py-3 mt-4"
+                    style="letter-spacing:2px; text-transform:uppercase; font-size:0.8rem;">
+                Tạo Tài Khoản
+            </button>
+        </form>
+
+        <p class="text-center small text-muted mt-4 mb-0">
+            Đã có tài khoản?
+            <a asp-page="./Login"
+               class="text-decoration-none fw-semibold"
+               style="color:var(--gold);">Đăng nhập ngay</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function checkStrength(val) {
+            let strength = 0;
+            if (val.length >= 6) strength += 25;
+            if (val.length >= 10) strength += 25;
+            if (/[A-Z]/.test(val)) strength += 25;
+            if (/[0-9!@@#$%]/.test(val)) strength += 25;
+
+            const bar = document.getElementById('strengthBar');
+            bar.style.width = strength + '%';
+            bar.style.background = strength <= 25 ? '#e74c3c'
+                : strength <= 50 ? '#f39c12'
+                : strength <= 75 ? '#3498db' : '#2ecc71';
+        }
+    </script>
+}

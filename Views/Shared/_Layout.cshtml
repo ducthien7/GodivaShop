@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Godiva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #C1A35E;
+            --gold-light: #d4b97a;
+            --dark: #1a1a1a;
+        }
+        body { font-family: 'Lato', sans-serif; background: #fff; color: var(--dark); }
+        .serif { font-family: 'Playfair Display', serif; }
+        .text-gold { color: var(--gold) !important; }
+        .bg-gold { background-color: var(--gold) !important; }
+        .btn-gold {
+            background-color: var(--gold); color: #fff; border: none;
+            font-family: 'Lato', sans-serif; letter-spacing: 1px;
+            transition: background 0.3s;
+        }
+        .btn-gold:hover { background-color: var(--gold-light); color: #fff; }
+        .btn-outline-gold {
+            border: 1px solid var(--gold); color: var(--gold);
+            transition: all 0.3s;
+        }
+        .btn-outline-gold:hover { background-color: var(--gold); color: #fff; }
+
+        /* ===== NAVBAR ===== */
+        .navbar { background: #fff; border-bottom: 1px solid #f0ebe0; padding: 0 2rem; min-height: 70px; }
+        .navbar-brand { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--gold) !important; letter-spacing: 3px; text-transform: uppercase; }
+        .nav-link { font-size: 0.82rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dark) !important; padding: 0 1rem !important; font-weight: 400; }
+        .nav-link:hover { color: var(--gold) !important; }
+        .navbar-nav { height: 70px; align-items: center; }
+
+        /* Mega Menu */
+        .mega-menu { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: #fff; border-top: 2px solid var(--gold); min-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; z-index: 9999; padding: 2rem; }
+        .mega-menu.show { display: flex; gap: 2rem; flex-wrap: wrap; }
+        .mega-menu a { font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; color: var(--dark); text-decoration: none; display: block; padding: 0.3rem 0; }
+        .mega-menu a:hover { color: var(--gold); }
+        .nav-item:hover .mega-menu { display: flex; }
+
+        /* Cart badge */
+        .cart-count { background: var(--gold); color: #fff; font-size: 0.65rem; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: -5px; right: -8px; }
+        .nav-icon { font-size: 1rem; color: var(--dark); transition: color 0.3s; }
+        .nav-icon:hover { color: var(--gold); }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid">
+            <!-- TRÁI: Brand -->
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">GODIVA</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navMain">
+                <!-- GIỮA: Menu -->
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Product" asp-action="Category">Bán Chạy Nhất</a>
+                    </li>
+                    <!-- Chocolates với Mega Menu -->
+                    <li class="nav-item position-relative" id="chocolateMenu">
+                        <a class="nav-link" href="#">Chocolates</a>
+                        <div class="mega-menu">
+                            <div>
+                                <a asp-controller="Product" asp-action="Category" asp-route-slug="assorted">Assorted Chocolates</a>
+                                <a asp-controller="Product" asp-action="Category" asp-route-slug="dark-chocolate">Dark Chocolate</a>
+                            </div>
+                            <div>
+                                <a asp-controller="Product" asp-action="Category" asp-route-slug="milk-chocolate">Milk Chocolate</a>
+                                <a asp-controller="Product" asp-action="Category" asp-route-slug="kosher">Kosher Chocolate</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Quà Tặng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Về Chúng Tôi</a>
+                    </li>
+                </ul>
+
+                <!-- PHẢI: Icons -->
+                <div class="d-flex align-items-center gap-3">
+                    <a href="#" class="nav-icon"><i class="fa fa-search"></i></a>
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="dropdown">
+                            <a href="#" class="nav-icon" data-bs-toggle="dropdown">
+                                <i class="fa fa-user"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                                {
+                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin Panel</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                }
+                                <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Tài khoản</a></li>
+                                <li>
+                                    <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+                                        <button class="dropdown-item">Đăng xuất</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login" class="nav-icon"><i class="fa fa-user"></i></a>
+                    }
+
+                    <a asp-controller="Cart" asp-action="Index" class="nav-icon position-relative">
+                        <i class="fa fa-shopping-bag"></i>
+                        @if (ViewBag.CartCount != null && ViewBag.CartCount > 0)
+                        {
+                            <span class="cart-count">@ViewBag.CartCount</span>
+                        }
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    @RenderBody()
+
+    <!-- FOOTER -->
+    <footer class="bg-dark text-white py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5 class="serif text-gold">GODIVA</h5>
+                    <p class="text-muted small">Thương hiệu chocolate sang trọng từ 1926.</p>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-gold small text-uppercase letter-spacing-2">Liên Kết</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-muted text-decoration-none">Về Chúng Tôi</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Chính Sách Bảo Mật</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-gold small text-uppercase">Liên Hệ</h6>
+                    <p class="text-muted small">support@godiva.vn</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.microsoft.com/ajax/signalr/latest/dist/browser/signalr.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

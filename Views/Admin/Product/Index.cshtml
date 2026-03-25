@@ -1,0 +1,92 @@
+﻿@model IEnumerable<GodivaShop.Web.Models.Domain.Product>
+@{
+    ViewData["Title"] = "Quản Lý Sản Phẩm"; Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="input-group" style="width:280px;">
+        <input type="text" class="form-control admin-form-control" placeholder="Tìm sản phẩm..." id="searchProd" oninput="searchProd()">
+        <span class="input-group-text" style="border-radius:0; background:#fff;"><i class="fa fa-search text-muted"></i></span>
+    </div>
+    <a asp-area="Admin" asp-controller="Product" asp-action="Create" class="btn btn-admin-gold">
+        <i class="fa fa-plus me-2"></i>Thêm Sản Phẩm
+    </a>
+</div>
+
+<div style="background:#fff;">
+    <table class="table admin-table mb-0" id="prodTable">
+        <thead>
+            <tr>
+                <th>Ảnh</th>
+                <th>Tên Sản Phẩm</th>
+                <th>Danh Mục</th>
+                <th>Giá Gốc</th>
+                <th>Best Seller</th>
+                <th>Trạng Thái</th>
+                <th>Thao Tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                var img = p.Images.FirstOrDefault(i => i.IsMain)?.ImagePath ?? p.Images.FirstOrDefault()?.ImagePath ?? "";
+                <tr class="prod-row" data-search="@p.Name.ToLower()">
+                    <td>
+                        <img src="@Url.Content(img)" style="width:50px; height:50px; object-fit:cover;"
+                             onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=50'">
+                    </td>
+                    <td>
+                        <div class="fw-semibold" style="font-size:0.85rem;">@p.Name</div>
+                        <div class="text-muted" style="font-size:0.75rem;">@p.Slug</div>
+                    </td>
+                    <td style="font-size:0.82rem;">@p.Category?.Name</td>
+                    <td class="text-gold fw-semibold">@p.BasePrice.ToString("N0")đ</td>
+                    <td>
+                        @if (p.IsBestSeller)
+                        {
+                            <i class="fa fa-star text-gold"></i>
+                        }
+                        else
+                        {
+                            <i class="fa fa-star text-muted"></i>
+                        }
+                    </td>
+                    <td>
+                        @if (p.IsActive)
+                        {
+                            <span class="badge" style="background:#d4edda; color:#155724; font-weight:400; font-size:0.7rem;">Hiển thị</span>
+                        }
+                        else
+                        {
+                            <span class="badge" style="background:#f8d7da; color:#721c24; font-weight:400; font-size:0.7rem;">Ẩn</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a asp-area="Admin" asp-controller="Product" asp-action="Edit" asp-route-id="@p.Id"
+                               class="btn btn-sm btn-admin-outline" title="Sửa">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                            <form asp-area="Admin" asp-controller="Product" asp-action="Delete" method="post"
+                                  onsubmit="return confirm('Ẩn sản phẩm này?')">
+                                <input type="hidden" name="id" value="@p.Id">
+                                <button type="submit" class="btn btn-sm" style="border:1px solid #e74c3c; color:#e74c3c; border-radius:0;">
+                                    <i class="fa fa-eye-slash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function searchProd() {
+            const t = $('#searchProd').val().toLowerCase();
+            $('.prod-row').each(function() { $(this).toggle($(this).data('search').includes(t)); });
+        }
+    </script>
+}

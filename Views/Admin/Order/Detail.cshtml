@@ -1,0 +1,116 @@
+﻿@model GodivaShop.Web.Models.Domain.Order
+@using GodivaShop.Web.Models.Domain
+@{ ViewData["Title"] = $"Chi Tiết Đơn #{Model.Id}"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+
+<div class="row g-4">
+    <!-- THÔNG TIN KHÁCH HÀNG -->
+    <div class="col-md-4">
+        <div style="background:#fff; padding:1.5rem; margin-bottom:1rem;">
+            <p class="small text-uppercase mb-3" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Thông Tin Khách Hàng</p>
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:48px; height:48px; background:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Playfair Display',serif; font-size:1.2rem;">
+                    @Model.GuestFullName[0]
+                </div>
+                <div>
+                    <div class="fw-semibold">@Model.GuestFullName</div>
+                    @if (Model.UserId == null)
+                    {
+                        <span class="badge" style="background:#f0ebe0; color:#C1A35E; font-size:0.65rem; font-weight:400;">Khách Vãng Lai</span>
+                    }
+                    else
+                    {
+                        <span class="badge" style="background:#e8f0e8; color:#2d6a2d; font-size:0.65rem; font-weight:400;">Thành Viên</span>
+                    }
+                </div>
+            </div>
+            <div class="small">
+                <div class="mb-2"><i class="fa fa-envelope me-2 text-gold"></i>@Model.GuestEmail</div>
+                <div class="mb-2"><i class="fa fa-phone me-2 text-gold"></i>@Model.GuestPhone</div>
+                <div><i class="fa fa-map-marker-alt me-2 text-gold"></i>@Model.ShippingAddress</div>
+            </div>
+        </div>
+
+        <!-- CẬP NHẬT TRẠNG THÁI -->
+        <div style="background:#fff; padding:1.5rem; margin-bottom:1rem;">
+            <p class="small text-uppercase mb-3" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Cập Nhật Trạng Thái</p>
+            <form asp-area="Admin" asp-controller="Order" asp-action="UpdateStatus" method="post">
+                <input type="hidden" name="id" value="@Model.Id">
+                <select name="status" class="form-select admin-form-control mb-2">
+                    @foreach (OrderStatus status in Enum.GetValues(typeof(OrderStatus)))
+                    {
+                        <!option value="@status" @(Model.Status == status ? "selected" : "")>@status</!option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-admin-gold w-100">
+                    <i class="fa fa-save me-2"></i>Lưu & Gửi Email
+                </button>
+            </form>
+        </div>
+
+        <!-- GHI CHÚ -->
+        @if (!string.IsNullOrEmpty(Model.Note))
+        {
+            <div style="background:#fff; padding:1.5rem;">
+                <p class="small text-uppercase mb-2" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Ghi Chú</p>
+                <p class="small text-muted mb-0 fst-italic">"@Model.Note"</p>
+            </div>
+        }
+    </div>
+
+    <!-- CHI TIẾT SẢN PHẨM -->
+    <div class="col-md-8">
+        <div style="background:#fff; padding:1.5rem;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <p class="small text-uppercase mb-0" style="letter-spacing:2px; color:#999; font-size:0.7rem;">
+                    Sản Phẩm Trong Đơn
+                </p>
+                <span class="small text-muted">Ngày đặt: @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+
+            @foreach (var item in Model.OrderItems)
+            {
+                var img = item.Product.Images.FirstOrDefault(i => i.IsMain)?.ImagePath
+                    ?? item.Product.Images.FirstOrDefault()?.ImagePath ?? "";
+                <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                    <img src="@Url.Content(img)" style="width:70px; height:70px; object-fit:cover;"
+                         onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=70'">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold" style="font-size:0.9rem;">@item.Product.Name</div>
+                        @if (item.ProductVariant != null)
+                        {
+                            <div class="small text-muted">@item.ProductVariant.Name</div>
+                        }
+                        @if (!string.IsNullOrEmpty(item.GiftMessage))
+                        {
+                            <div class="small fst-italic" style="color:var(--gold);">💌 "@item.GiftMessage"</div>
+                        }
+                        <div class="small text-muted">SL: @item.Quantity × @item.UnitPrice.ToString("N0")đ</div>
+                    </div>
+                    <div class="text-gold fw-semibold">@((item.Quantity * item.UnitPrice).ToString("N0"))đ</div>
+                </div>
+            }
+
+            <!-- TỔNG TIỀN -->
+            <div class="mt-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Tạm tính:</span>
+                    <span>@Model.TotalAmount.ToString("N0")đ</span>
+                </div>
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="d-flex justify-content-between small mb-1 text-success">
+                        <span>Giảm giá (@Model.CouponCode):</span>
+                        <span>-@Model.DiscountAmount.ToString("N0")đ</span>
+                    </div>
+                }
+                <hr>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span class="serif">Tổng Cộng:</span>
+                    <span class="text-gold serif" style="font-size:1.2rem;">
+                        @((Model.TotalAmount - Model.DiscountAmount).ToString("N0"))đ
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

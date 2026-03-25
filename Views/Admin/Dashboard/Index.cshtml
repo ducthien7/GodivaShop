@@ -1,0 +1,63 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard"; Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-gold serif">@ViewBag.TotalOrders</h3>
+                <p class="text-muted small mb-0">Tổng Đơn Hàng</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-gold serif">@(((decimal)ViewBag.TotalRevenue).ToString("N0"))đ</h3>
+                <p class="text-muted small mb-0">Tổng Doanh Thu</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-gold serif">@ViewBag.GuestOrders</h3>
+                <p class="text-muted small mb-0">Khách Vãng Lai</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h3 class="text-gold serif">@ViewBag.MemberOrders</h3>
+                <p class="text-muted small mb-0">Khách Thành Viên</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SignalR: Nhận thông báo đơn hàng mới -->
+<div id="orderNotifications"></div>
+
+@section Scripts {
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/orderHub")
+            .build();
+
+        connection.on("NewOrder", function(order) {
+            const html = `
+                <div class="alert" style="border-left:4px solid #C1A35E; animation: fadeIn 0.5s;">
+                    🛍️ <strong>Đơn hàng mới #${order.orderId}</strong> từ
+                    <strong>${order.customerName}</strong>
+                    ${order.isGuest ? '(Khách vãng lai)' : '(Thành viên)'} —
+                    ${order.amount.toLocaleString('vi-VN')}đ
+                </div>`;
+            $('#orderNotifications').prepend(html);
+        });
+
+        connection.start().then(() => connection.invoke("JoinAdminGroup"))
+                  .catch(err => console.error(err));
+    </script>
+}

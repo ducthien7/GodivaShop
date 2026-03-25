@@ -1,0 +1,114 @@
+﻿@model IEnumerable<GodivaShop.Web.Models.Domain.Coupon>
+@using GodivaShop.Web.Models.Domain
+@{
+    ViewData["Title"] = "Quản Lý Mã Giảm Giá"; Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row g-4">
+    <!-- FORM TẠO MÃ MỚI -->
+    <div class="col-md-4">
+        <div style="background:#fff; padding:1.5rem; position:sticky; top:80px;">
+            <p class="small text-uppercase mb-4" style="letter-spacing:2px; color:#999; font-size:0.7rem;">Tạo Mã Mới</p>
+            <form asp-area="Admin" asp-controller="Coupon" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Mã Giảm Giá *</label>
+                    <input type="text" name="Code" class="form-control admin-form-control"
+                           placeholder="VD: SUMMER20" style="text-transform:uppercase;" required>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Loại Giảm Giá</label>
+                    <select name="DiscountType" class="form-select admin-form-control">
+                        <option value="0">Phần trăm (%)</option>
+                        <option value="1">Số tiền cố định (VNĐ)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Giá Trị Giảm</label>
+                    <input type="number" name="DiscountValue" class="form-control admin-form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Đơn Tối Thiểu (VNĐ)</label>
+                    <input type="number" name="MinOrderAmount" class="form-control admin-form-control" placeholder="Không giới hạn">
+                </div>
+                <div class="mb-3">
+                    <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Số Lần Dùng Tối Đa</label>
+                    <input type="number" name="MaxUsageCount" class="form-control admin-form-control" placeholder="Không giới hạn">
+                </div>
+                <div class="mb-3">
+                    <label class="small text-uppercase mb-1" style="letter-spacing:1px;">Ngày Hết Hạn</label>
+                    <input type="date" name="ExpiryDate" class="form-control admin-form-control">
+                </div>
+                <input type="hidden" name="IsActive" value="true">
+                <button type="submit" class="btn btn-admin-gold w-100">
+                    <i class="fa fa-plus me-2"></i>Tạo Mã Giảm Giá
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH MÃ -->
+    <div class="col-md-8">
+        <div style="background:#fff;">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr><th>Mã</th><th>Loại</th><th>Giá Trị</th><th>Điều Kiện</th><th>Đã Dùng</th><th>Hết Hạn</th><th>Trạng Thái</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td>
+                                <span class="fw-semibold text-gold" style="font-family:monospace; font-size:1rem;">@c.Code</span>
+                            </td>
+                            <td style="font-size:0.8rem;">
+                                @(c.DiscountType == DiscountType.Percentage ? "Phần trăm" : "Cố định")
+                            </td>
+                            <td class="text-gold fw-semibold">
+                                @(c.DiscountType == DiscountType.Percentage
+                                    ? $"{c.DiscountValue}%"
+                                    : $"{c.DiscountValue.ToString("N0")}đ")
+                            </td>
+                            <td style="font-size:0.8rem;">
+                                @(c.MinOrderAmount.HasValue ? $"Từ {c.MinOrderAmount.Value.ToString("N0")}đ" : "Không giới hạn")
+                            </td>
+                            <td style="font-size:0.82rem;">
+                                @c.UsedCount / @(c.MaxUsageCount?.ToString() ?? "∞")
+                            </td>
+                            <td style="font-size:0.8rem;" class="text-muted">
+                                @(c.ExpiryDate?.ToString("dd/MM/yyyy") ?? "Vĩnh viễn")
+                            </td>
+                            <td>
+                                @if (c.IsActive)
+                                {
+                                    <span class="badge" style="background:#d4edda; color:#155724; font-weight:400; font-size:0.7rem;">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge" style="background:#f8d7da; color:#721c24; font-weight:400; font-size:0.7rem;">Tắt</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <form asp-area="Admin" asp-controller="Coupon" asp-action="Toggle" method="post">
+                                        <input type="hidden" name="id" value="@c.Id">
+                                        <button type="submit" class="btn btn-sm btn-admin-outline" title="@(c.IsActive ? "Tắt" : "Bật")">
+                                            <i class="fa @(c.IsActive ? "fa-toggle-on text-gold" : "fa-toggle-off")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-area="Admin" asp-controller="Coupon" asp-action="Delete" method="post"
+                                          onsubmit="return confirm('Xóa mã này?')">
+                                        <input type="hidden" name="id" value="@c.Id">
+                                        <button type="submit" class="btn btn-sm" style="border:1px solid #e74c3c; color:#e74c3c; border-radius:0;">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

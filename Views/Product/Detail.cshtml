@@ -1,0 +1,165 @@
+﻿@model GodivaShop.Web.Models.Domain.Product
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+@section Styles {
+    <style>
+        .main-image { width: 100%; height: 480px; object-fit: cover; transition: opacity 0.3s; }
+        .thumbnail-strip img { width: 80px; height: 80px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
+        .thumbnail-strip img:hover, .thumbnail-strip img.active { border-color: var(--gold); }
+        .variant-btn { border: 1px solid #ddd; background: #fff; padding: 8px 20px; font-size: 0.8rem; letter-spacing: 1px; transition: all 0.2s; }
+        .variant-btn.active, .variant-btn:hover { border-color: var(--gold); background: var(--gold); color: #fff; }
+        .price-display { font-size: 1.8rem; color: var(--gold); font-family: 'Playfair Display', serif; transition: opacity 0.3s; }
+        .accordion-button:not(.collapsed) { color: var(--gold); box-shadow: none; background: #fff; }
+        .accordion-button:focus { box-shadow: none; }
+        .accordion-item { border: none; border-bottom: 1px solid #eee; }
+    </style>
+}
+
+<div class="container py-5">
+    <div class="row g-5">
+        <!-- CỘT TRÁI: GALLERY -->
+        <div class="col-md-6">
+            <img id="mainImage"
+                 src="@Url.Content(Model.Images.FirstOrDefault(i => i.IsMain)?.ImagePath ?? Model.Images.FirstOrDefault()?.ImagePath ?? "~/images/no-image.jpg")"
+                 class="main-image mb-3"
+                 onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=600'">
+
+            <div class="thumbnail-strip d-flex gap-2 flex-wrap">
+                @foreach (var img in Model.Images)
+                {
+                    <img src="@Url.Content(img.ImagePath)"
+                         class="thumbnail @(img.IsMain ? "active" : "")"
+                         onclick="changeMainImage(this, '@Url.Content(img.ImagePath)')"
+                         onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=80'">
+                }
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: THÔNG TIN -->
+        <div class="col-md-6">
+            <p class="text-muted small text-uppercase letter-spacing-2 mb-1">@Model.Category?.Name</p>
+            <h1 class="serif mb-3" style="font-size:2.2rem;">@Model.Name</h1>
+
+            <!-- GIÁ -->
+            <div class="price-display mb-4" id="priceDisplay">
+                @Model.BasePrice.ToString("N0") VNĐ
+            </div>
+
+            <!-- BIẾN THỂ (Size) -->
+            @if (Model.Variants.Any())
+            {
+                <div class="mb-4">
+                    <p class="small text-uppercase" style="letter-spacing:2px; font-weight:600;">Chọn số lượng:</p>
+                    <div class="d-flex gap-2 flex-wrap" id="variantGroup">
+                        @foreach (var variant in Model.Variants.Where(v => v.IsActive))
+                        {
+                            <button class="variant-btn" data-variant-id="@variant.Id"
+                                    onclick="selectVariant(this, @variant.Id)">
+                                @variant.Name
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- LỜI CHÚC QUÀ TẶNG -->
+            <div class="mb-4">
+                <label class="small text-uppercase mb-2" style="letter-spacing:1px;">Lời Chúc (Tùy chọn)</label>
+                <textarea id="giftMessage" class="form-control" rows="2" placeholder="Nhập lời chúc của bạn..."></textarea>
+            </div>
+
+            <!-- NÚT THÊM VÀO GIỎ -->
+            <button onclick="addToCart(@Model.Id)" class="btn btn-gold w-100 py-3 mb-3"
+                    style="letter-spacing:2px; text-transform:uppercase; font-size:0.85rem;">
+                <i class="fa fa-shopping-bag me-2"></i> Thêm Vào Giỏ
+            </button>
+
+            <!-- ACCORDION MÔ TẢ -->
+            <div class="accordion" id="productAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#desc">
+                            Mô Tả Sản Phẩm
+                        </button>
+                    </h2>
+                    <div id="desc" class="accordion-collapse collapse show">
+                        <div class="accordion-body small text-muted">@Model.Description</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#delivery">
+                            Thông Tin Giao Hàng
+                        </button>
+                    </h2>
+                    <div id="delivery" class="accordion-collapse collapse">
+                        <div class="accordion-body small text-muted">
+                            Giao hàng toàn quốc 2-5 ngày làm việc. Miễn phí vận chuyển cho đơn từ 500.000đ.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedVariantId = null;
+
+        // Đổi ảnh chính - jQuery
+        function changeMainImage(thumb, src) {
+            $('.thumbnail').removeClass('active');
+            $(thumb).addClass('active');
+            $('#mainImage').fadeOut(150, function() {
+                $(this).attr('src', src).fadeIn(200);
+            });
+        }
+
+        // Chọn biến thể - AJAX lấy giá mới
+        function selectVariant(btn, variantId) {
+            selectedVariantId = variantId;
+            $('.variant-btn').removeClass('active');
+            $(btn).addClass('active');
+
+            $.get('/Product/GetVariantPrice', { variantId: variantId }, function(data) {
+                $('#priceDisplay').fadeTo(150, 0, function() {
+                    $(this).text(new Intl.NumberFormat('vi-VN').format(data.price) + ' VNĐ')
+                           .fadeTo(200, 1);
+                });
+            });
+        }
+
+        // Thêm vào giỏ - AJAX
+        function addToCart(productId) {
+            const data = {
+                productId: productId,
+                variantId: selectedVariantId,
+                variantName: selectedVariantId ? $('.variant-btn.active').text().trim() : null,
+                quantity: 1,
+                unitPrice: parseFloat($('#priceDisplay').text().replace(/[^0-9]/g, '')),
+                productName: '@Model.Name',
+                productImage: $('#mainImage').attr('src'),
+                giftMessage: $('#giftMessage').val()
+            };
+
+            $.ajax({
+                url: '/Product/AddToCart',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(res) {
+                    if (res.success) {
+                        $('.cart-count').text(res.cartCount).show();
+                        // Toast thông báo
+                        const toast = $('<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999"><div class="toast show" style="border-left:3px solid var(--gold)"><div class="toast-body">✓ Đã thêm vào giỏ hàng!</div></div></div>');
+                        $('body').append(toast);
+                        setTimeout(() => toast.remove(), 2500);
+                    }
+                }
+            });
+        }
+    </script>
+}

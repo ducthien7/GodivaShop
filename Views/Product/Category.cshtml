@@ -1,0 +1,160 @@
+﻿@model IEnumerable<GodivaShop.Web.Models.Domain.Product>
+@{
+    ViewData["Title"] = "Sản Phẩm";
+}
+
+@section Styles {
+    <style>
+        .filter-sidebar { background: #faf8f5; padding: 1.5rem; }
+        .filter-title { font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: #333; margin-bottom: 1rem; }
+        .filter-link { display: block; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; padding: 6px 0; color: #555; text-decoration: none; border-bottom: 1px solid #eee; transition: color 0.2s; }
+        .filter-link:hover, .filter-link.active { color: var(--gold); }
+        .product-card { overflow: hidden; border: none; transition: box-shadow 0.3s; background: #fff; }
+        .product-card:hover { box-shadow: 0 8px 25px rgba(193,163,94,0.15); }
+        .product-card .img-wrap { overflow: hidden; height: 260px; position: relative; }
+        .product-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .product-card:hover img { transform: scale(1.07); }
+        .hover-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background 0.3s; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 1rem; }
+        .product-card:hover .hover-overlay { background: rgba(0,0,0,0.12); }
+        .hover-overlay .btn { transform: translateY(20px); opacity: 0; transition: all 0.3s; }
+        .product-card:hover .hover-overlay .btn { transform: translateY(0); opacity: 1; }
+        .badge-bestseller { background: var(--gold); font-size: 0.65rem; letter-spacing: 1px; }
+        .price-range input[type=range] { accent-color: var(--gold); }
+        .breadcrumb-item a { color: var(--gold); text-decoration: none; }
+        .sort-select { border: 1px solid #ddd; border-radius: 0; font-size: 0.8rem; padding: 6px 12px; }
+    </style>
+}
+
+<!-- BREADCRUMB -->
+<div style="background:#faf8f5; padding:12px 0; border-bottom:1px solid #eee;">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang Chủ</a></li>
+                <li class="breadcrumb-item active">Sản Phẩm</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+
+        <!-- BỘ LỌC BÊN TRÁI -->
+        <div class="col-md-2">
+            <div class="filter-sidebar">
+                <p class="filter-title">Danh Mục</p>
+                <a asp-controller="Product" asp-action="Category"
+                   class="filter-link @(ViewBag.CurrentSlug == null ? "active" : "")">Tất Cả</a>
+                @foreach (var cat in (IEnumerable<GodivaShop.Web.Models.Domain.Category>)ViewBag.Categories)
+                {
+                    <a asp-controller="Product" asp-action="Category" asp-route-slug="@cat.Slug"
+                       class="filter-link @(ViewBag.CurrentSlug == cat.Slug ? "active" : "")">
+                        @cat.Name
+                    </a>
+                }
+
+                <p class="filter-title mt-4">Khoảng Giá</p>
+                <div class="price-range">
+                    <div class="d-flex justify-content-between small text-muted mb-2">
+                        <span id="priceMin">0đ</span>
+                        <span id="priceMax">2,000,000đ</span>
+                    </div>
+                    <input type="range" class="form-range" min="0" max="2000000" step="50000"
+                           id="priceSlider" value="2000000" oninput="updatePriceFilter(this.value)">
+                    <a id="applyPrice" href="#" class="btn btn-outline-gold btn-sm w-100 mt-2"
+                       style="font-size:0.75rem; letter-spacing:1px; border-radius:0;">Lọc</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- DANH SÁCH SẢN PHẨM -->
+        <div class="col-md-10">
+            <!-- HEADER ROW -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <p class="text-muted small mb-0">
+                    Hiển thị <strong>@Model.Count()</strong> sản phẩm
+                </p>
+                <select class="sort-select" onchange="sortProducts(this.value)">
+                    <option value="">Sắp xếp: Mặc định</option>
+                    <option value="price-asc">Giá: Thấp đến Cao</option>
+                    <option value="price-desc">Giá: Cao đến Thấp</option>
+                    <option value="name">Tên A-Z</option>
+                    <option value="bestseller">Best Seller</option>
+                </select>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fa fa-box-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Không có sản phẩm nào trong danh mục này.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4" id="productGrid">
+                    @foreach (var product in Model)
+                    {
+                        var mainImg = product.Images.FirstOrDefault(i => i.IsMain)?.ImagePath
+                        ?? product.Images.FirstOrDefault()?.ImagePath
+                        ?? "~/images/no-image.jpg";
+                        <div class="col-md-3 product-item"
+                             data-price="@product.BasePrice"
+                             data-name="@product.Name"
+                             data-bestseller="@product.IsBestSeller.ToString().ToLower()">
+                            <div class="card product-card h-100">
+                                <div class="img-wrap">
+                                    <img src="@Url.Content(mainImg)" alt="@product.Name"
+                                         onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=400'">
+                                    @if (product.IsBestSeller)
+                                    {
+                                        <span class="badge badge-bestseller position-absolute top-0 start-0 m-2">BEST SELLER</span>
+                                    }
+                                    <div class="hover-overlay">
+                                        <a asp-controller="Product" asp-action="Detail" asp-route-id="@product.Id"
+                                           class="btn btn-gold btn-sm px-4" style="letter-spacing:1px; font-size:0.75rem;">
+                                            Xem Chi Tiết
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="card-body text-center py-3">
+                                    <p class="text-muted small mb-1" style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase;">@product.Category?.Name</p>
+                                    <h6 class="serif mb-2" style="font-size:0.95rem;">@product.Name</h6>
+                                    <p class="text-gold mb-0" style="font-weight:600;">@product.BasePrice.ToString("N0") VNĐ</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updatePriceFilter(val) {
+            const formatted = parseInt(val).toLocaleString('vi-VN');
+            $('#priceMax').text(formatted + 'đ');
+            const slug = '@ViewBag.CurrentSlug' || '';
+            $('#applyPrice').attr('href', `/Product/Category?slug=${slug}&maxPrice=${val}`);
+        }
+
+        function sortProducts(val) {
+            const items = $('.product-item').toArray();
+            if (val === 'price-asc') {
+                items.sort((a, b) => $(a).data('price') - $(b).data('price'));
+            } else if (val === 'price-desc') {
+                items.sort((a, b) => $(b).data('price') - $(a).data('price'));
+            } else if (val === 'name') {
+                items.sort((a, b) => $(a).data('name').localeCompare($(b).data('name')));
+            } else if (val === 'bestseller') {
+                items.sort((a, b) => ($(b).data('bestseller') === 'true' ? 1 : 0) - ($(a).data('bestseller') === 'true' ? 1 : 0));
+            }
+            const grid = $('#productGrid');
+            grid.empty();
+            items.forEach(item => grid.append(item));
+        }
+    </script>
+}

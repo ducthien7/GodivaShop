@@ -1,0 +1,121 @@
+﻿@model GodivaShop.Web.Models.ViewModels.CheckoutViewModel
+@{
+    ViewData["Title"] = "Thanh Toán";
+}
+
+<div class="container py-5">
+    <h2 class="serif text-center mb-5">Thanh Toán</h2>
+
+    <div class="row g-5">
+        <!-- CỘT TRÁI: FORM THÔNG TIN -->
+        <div class="col-md-7">
+            @if (!User.Identity!.IsAuthenticated)
+            {
+                <div class="alert" style="border:1px solid var(--gold); background:#fdf9f0; border-radius:0;">
+                    <small>
+                        Bạn chưa đăng nhập. Vui lòng điền thông tin bên dưới hoặc
+                        <a asp-area="Identity" asp-page="/Account/Login" class="text-gold">đăng nhập</a>.
+                    </small>
+                </div>
+            }
+
+            <form asp-action="PlaceOrder" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small text-uppercase" style="letter-spacing:1px;">Họ và Tên *</label>
+                        <input asp-for="FullName" class="form-control" style="border-radius:0; border-color:#ddd;">
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-uppercase" style="letter-spacing:1px;">Email *</label>
+                        <input asp-for="Email" class="form-control" style="border-radius:0;">
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-uppercase" style="letter-spacing:1px;">Số điện thoại *</label>
+                        <input asp-for="Phone" class="form-control" style="border-radius:0;">
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small text-uppercase" style="letter-spacing:1px;">Địa chỉ giao hàng *</label>
+                        <input asp-for="ShippingAddress" class="form-control" style="border-radius:0;">
+                        <span asp-validation-for="ShippingAddress" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small text-uppercase" style="letter-spacing:1px;">Ghi chú</label>
+                        <textarea asp-for="Note" class="form-control" rows="2" style="border-radius:0;"></textarea>
+                    </div>
+
+                    <!-- MÃ GIẢM GIÁ -->
+                    <div class="col-12">
+                        <label class="form-label small text-uppercase" style="letter-spacing:1px;">Mã Giảm Giá</label>
+                        <div class="input-group">
+                            <input asp-for="CouponCode" id="couponInput" class="form-control" style="border-radius:0;" placeholder="Nhập mã...">
+                            <button type="button" class="btn btn-outline-gold" onclick="applyCoupon()" style="border-radius:0;">Áp dụng</button>
+                        </div>
+                        <div id="couponMsg" class="mt-1 small"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-gold w-100 py-3 mt-4"
+                        style="letter-spacing:2px; text-transform:uppercase;">
+                    Đặt Hàng
+                </button>
+            </form>
+        </div>
+
+        <!-- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG -->
+        <div class="col-md-5">
+            <div style="background:#f9f7f3; padding:2rem;">
+                <h5 class="serif mb-4">Đơn Hàng Của Bạn</h5>
+                @foreach (var item in Model.CartItems)
+                {
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span>
+                            @item.ProductName
+                            @(item.VariantName != null ? $"({item.VariantName})" : "") × @item.Quantity
+                        </span>
+                        <span>@item.Subtotal.ToString("N0")đ</span>
+                    </div>
+                }
+                <hr>
+                <div class="d-flex justify-content-between mb-1 small">
+                    <span>Tạm tính:</span>
+                    <span>@Model.TotalAmount.ToString("N0")đ</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1 small text-success" id="discountRow" style="display:none!important">
+                    <span>Giảm giá:</span>
+                    <span id="discountDisplay">-0đ</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span class="serif">Tổng cộng:</span>
+                    <span class="text-gold" id="finalTotal">@Model.TotalAmount.ToString("N0")đ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let totalAmount = @Model.TotalAmount;
+        let discountAmount = 0;
+
+        function applyCoupon() {
+            const code = $('#couponInput').val();
+            $.post('/Cart/ApplyCoupon', { code: code, total: totalAmount }, function(res) {
+                if (res.success) {
+                    discountAmount = res.discount;
+                    $('#couponMsg').html('<span class="text-success">' + res.message + '</span>');
+                    $('#discountRow').show();
+                    $('#discountDisplay').text('-' + discountAmount.toLocaleString('vi-VN') + 'đ');
+                    $('#finalTotal').text((totalAmount - discountAmount).toLocaleString('vi-VN') + 'đ');
+                } else {
+                    $('#couponMsg').html('<span class="text-danger">' + res.message + '</span>');
+                }
+            });
+        }
+    </script>
+}

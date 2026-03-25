@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Đặt Hàng Thành Công";
+}
+
+@section Styles {
+    <style>
+        .success-wrapper { min-height: 70vh; display: flex; align-items: center; justify-content: center; }
+        .success-box { text-align: center; max-width: 500px; padding: 3rem; }
+        .success-icon { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #C1A35E, #d4b97a); display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; animation: popIn 0.6s ease; }
+        @@keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .success-icon i { font-size: 2.5rem; color: #fff; }
+        .order-id { display: inline-block; background: #faf8f5; border: 1px solid var(--gold); padding: 8px 24px; font-size: 1.2rem; color: var(--gold); font-family: 'Playfair Display', serif; margin: 1rem 0; }
+        .step-list { list-style: none; padding: 0; margin: 1.5rem 0; text-align: left; background: #faf8f5; padding: 1.2rem 1.5rem; }
+        .step-list li { font-size: 0.85rem; padding: 4px 0; color: #555; }
+        .step-list li::before { content: "✓ "; color: var(--gold); font-weight: 700; }
+    </style>
+}
+
+<div class="success-wrapper">
+    <div class="success-box">
+        <div class="success-icon">
+            <i class="fa fa-check"></i>
+        </div>
+
+        <h2 class="serif mb-2">Đặt Hàng Thành Công!</h2>
+        <p class="text-muted small mb-3">Cảm ơn bạn đã tin tưởng Godiva Chocolate</p>
+
+        <div class="order-id">Đơn hàng #@ViewBag.OrderId</div>
+
+        <p class="text-muted small">
+            Chúng tôi đã gửi email xác nhận đơn hàng. Vui lòng kiểm tra hộp thư của bạn.
+        </p>
+
+        <ul class="step-list">
+            <li>Đơn hàng đã được tiếp nhận</li>
+            <li>Email xác nhận đã được gửi</li>
+            <li>Chúng tôi sẽ liên hệ trong 24h</li>
+            <li>Giao hàng trong 2-5 ngày làm việc</li>
+        </ul>
+
+        <div class="d-flex gap-3 justify-content-center">
+            <a asp-controller="Home" asp-action="Index"
+               class="btn btn-outline-gold px-4" style="border-radius:0; letter-spacing:1px; font-size:0.8rem;">
+                <i class="fa fa-home me-2"></i>Về Trang Chủ
+            </a>
+            <a asp-controller="Product" asp-action="Category"
+               class="btn btn-gold px-4" style="border-radius:0; letter-spacing:1px; font-size:0.8rem;">
+                <i class="fa fa-shopping-bag me-2"></i>Tiếp Tục Mua Sắm
+            </a>
+        </div>
+    </div>
+</div>

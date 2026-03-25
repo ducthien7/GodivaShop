@@ -1,0 +1,79 @@
+﻿@model IEnumerable<GodivaShop.Web.Models.Domain.ApplicationUser>
+@{ ViewData["Title"] = "Quản Lý Tài Khoản"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="input-group" style="width:300px;">
+        <input type="text" class="form-control admin-form-control" placeholder="Tìm kiếm..." id="searchUser" oninput="searchUser()">
+        <span class="input-group-text" style="border-radius:0; background:#fff;"><i class="fa fa-search text-muted"></i></span>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        <span class="small text-muted">Tổng: <strong>@Model.Count()</strong> tài khoản</span>
+    </div>
+</div>
+
+<div style="background:#fff;">
+    <table class="table admin-table mb-0">
+        <thead>
+            <tr>
+                <th>Tài Khoản</th><th>Email</th><th>Số Điện Thoại</th>
+                <th>Ngày Tạo</th><th>Vai Trò Hiện Tại</th><th>Thay Đổi Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                var roles = ((Dictionary<string, IList<string>>)ViewBag.UserRoles)[user.Id];
+                var currentRole = roles.FirstOrDefault() ?? "Customer";
+                <tr class="user-row" data-search="@($"{user.FullName} {user.Email}".ToLower())">
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:36px; height:36px; background:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.85rem; font-family:'Playfair Display',serif; flex-shrink:0;">
+                                @(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")
+                            </div>
+                            <div>
+                                <div class="fw-semibold" style="font-size:0.85rem;">@user.FullName</div>
+                                <div class="text-muted" style="font-size:0.72rem;">ID: @user.Id[..8]...</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="font-size:0.82rem;">@user.Email</td>
+                    <td style="font-size:0.82rem;">@(user.Phone ?? "—")</td>
+                    <td class="text-muted" style="font-size:0.8rem;">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        @{
+                            var badgeColor = currentRole switch {
+                                "Admin" => "background:#1a1a1a; color:#C1A35E",
+                                "Staff" => "background:#e8f0ff; color:#1a5cb8",
+                                _ => "background:#f0ebe0; color:#C1A35E"
+                            };
+                        }
+                        <span class="badge" style="@badgeColor; font-weight:400; font-size:0.7rem; letter-spacing:1px;">@currentRole</span>
+                    </td>
+                    <td>
+                        <form asp-area="Admin" asp-controller="User" asp-action="ChangeRole" method="post" class="d-flex gap-2 align-items-center">
+                            <input type="hidden" name="userId" value="@user.Id">
+                            <select name="newRole" class="form-select admin-form-control" style="width:130px;">
+                                @foreach (var role in (IEnumerable<string?>)ViewBag.AllRoles)
+                                {
+                                    <!option value="@role" @(currentRole == role ? "selected" : "")>@role</!option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-admin-gold" style="padding:6px 14px;">
+                                <i class="fa fa-check"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    function searchUser() {
+        const t = $('#searchUser').val().toLowerCase();
+        $('.user-row').each(function() { $(this).toggle($(this).data('search').includes(t)); });
+    }
+</script>
+}

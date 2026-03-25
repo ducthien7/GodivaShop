@@ -1,0 +1,180 @@
+﻿@model List<GodivaShop.Web.Models.ViewModels.CartItem>
+@{
+    ViewData["Title"] = "Giỏ Hàng";
+}
+
+@section Styles {
+    <style>
+        .cart-table { border-collapse: separate; border-spacing: 0 12px; }
+        .cart-row td { background: #faf8f5; vertical-align: middle; padding: 1rem; }
+        .cart-row td:first-child { border-left: 3px solid transparent; }
+        .cart-row:hover td:first-child { border-left-color: var(--gold); }
+        .cart-img { width: 80px; height: 80px; object-fit: cover; }
+        .qty-input { width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 0; padding: 4px; }
+        .qty-btn { background: none; border: 1px solid #ddd; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .qty-btn:hover { border-color: var(--gold); color: var(--gold); }
+        .summary-box { background: #faf8f5; padding: 2rem; position: sticky; top: 90px; }
+        .remove-btn { color: #aaa; background: none; border: none; font-size: 1.1rem; transition: color 0.2s; }
+        .remove-btn:hover { color: #e74c3c; }
+        .empty-cart { text-align: center; padding: 5rem 0; }
+        .empty-cart i { font-size: 5rem; color: #e0d5c5; margin-bottom: 1.5rem; display: block; }
+    </style>
+}
+
+<div class="container py-5">
+    <h2 class="serif text-center mb-2">Giỏ Hàng</h2>
+    <p class="text-center text-muted small mb-5" style="letter-spacing:2px; text-transform:uppercase;">
+        @Model.Sum(x => x.Quantity) sản phẩm
+    </p>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-cart">
+            <i class="fa fa-shopping-bag"></i>
+            <h5 class="serif mb-3">Giỏ hàng của bạn đang trống</h5>
+            <p class="text-muted small mb-4">Hãy thêm những món ngon vào giỏ hàng nhé!</p>
+            <a asp-controller="Product" asp-action="Category"
+               class="btn btn-gold px-5 py-3" style="letter-spacing:2px; text-transform:uppercase;">
+                Tiếp Tục Mua Sắm
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-5">
+            <!-- BẢNG SẢN PHẨM -->
+            <div class="col-md-8">
+                <table class="table cart-table w-100">
+                    <thead>
+                        <tr>
+                            <th class="small text-uppercase text-muted pb-3" style="letter-spacing:1px; font-weight:400;">Sản Phẩm</th>
+                            <th class="small text-uppercase text-muted pb-3 text-center" style="letter-spacing:1px; font-weight:400;">Số Lượng</th>
+                            <th class="small text-uppercase text-muted pb-3 text-end" style="letter-spacing:1px; font-weight:400;">Thành Tiền</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartBody">
+                        @foreach (var item in Model)
+                        {
+                            <tr class="cart-row" id="row-@item.ProductId-@item.VariantId">
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="@item.ProductImage" class="cart-img"
+                                             onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=80'">
+                                        <div>
+                                            <p class="serif mb-1 fw-semibold" style="font-size:0.9rem;">@item.ProductName</p>
+                                            @if (!string.IsNullOrEmpty(item.VariantName))
+                                            {
+                                                <p class="text-muted small mb-1">@item.VariantName</p>
+                                            }
+                                            @if (!string.IsNullOrEmpty(item.GiftMessage))
+                                            {
+                                                <p class="small mb-0" style="color:var(--gold); font-style:italic;">
+                                                    "💌 @item.GiftMessage"
+                                                </p>
+                                            }
+                                            <p class="text-gold small mb-0">@item.UnitPrice.ToString("N0") VNĐ</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center gap-1">
+                                        <button class="qty-btn" onclick="changeQty(@item.ProductId, @(item.VariantId?.ToString() ?? "null"), -1)">−</button>
+                                        <input type="number" class="qty-input" value="@item.Quantity" min="1"
+                                               onchange="updateQty(@item.ProductId, @(item.VariantId?.ToString() ?? "null"), this.value)"
+                                               id="qty-@item.ProductId-@item.VariantId">
+                                        <button class="qty-btn" onclick="changeQty(@item.ProductId, @(item.VariantId?.ToString() ?? "null"), 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-semibold text-gold" id="subtotal-@item.ProductId-@item.VariantId">
+                                        @item.Subtotal.ToString("N0") VNĐ
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="remove-btn"
+                                            onclick="removeItem(@item.ProductId, @(item.VariantId?.ToString() ?? "null"))">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <a asp-controller="Product" asp-action="Category"
+                       class="text-gold small text-decoration-none" style="letter-spacing:1px;">
+                        <i class="fa fa-arrow-left me-2"></i>Tiếp Tục Mua Sắm
+                    </a>
+                </div>
+            </div>
+
+            <!-- TÓM TẮT ĐƠN HÀNG -->
+            <div class="col-md-4">
+                <div class="summary-box">
+                    <h5 class="serif mb-4">Tóm Tắt Đơn Hàng</h5>
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span>Tạm tính:</span>
+                        <span id="cartTotal">@Model.Sum(x => x.Subtotal).ToString("N0") VNĐ</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span>Phí giao hàng:</span>
+                        <span class="text-success">Miễn phí</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="serif fw-semibold">Tổng cộng:</span>
+                        <span class="text-gold fw-semibold serif" id="grandTotal">@Model.Sum(x => x.Subtotal).ToString("N0") VNĐ</span>
+                    </div>
+                    <a asp-controller="Cart" asp-action="Checkout"
+                       class="btn btn-gold w-100 py-3 text-center text-decoration-none d-block"
+                       style="letter-spacing:2px; text-transform:uppercase; font-size:0.82rem;">
+                        Tiến Hành Thanh Toán
+                    </a>
+                    <p class="text-center text-muted small mt-3 mb-0">
+                        <i class="fa fa-lock me-1"></i> Thanh toán bảo mật
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function changeQty(productId, variantId, delta) {
+            const input = $(`#qty-${productId}-${variantId}`);
+            const newVal = Math.max(1, parseInt(input.val()) + delta);
+            input.val(newVal);
+            updateQty(productId, variantId, newVal);
+        }
+
+        function updateQty(productId, variantId, quantity) {
+            quantity = parseInt(quantity);
+            if (quantity < 1) { removeItem(productId, variantId); return; }
+            $.post('/Cart/UpdateQuantity', {
+                productId, variantId: variantId === 'null' ? null : variantId, quantity
+            }, function(res) {
+                if (res.success) {
+                    location.reload(); // Reload để cập nhật tổng tiền chính xác
+                }
+            });
+        }
+
+        function removeItem(productId, variantId) {
+            if (!confirm('Xóa sản phẩm này khỏi giỏ hàng?')) return;
+            $.post('/Cart/Remove', {
+                productId, variantId: variantId === 'null' ? null : variantId
+            }, function(res) {
+                if (res.success) {
+                    $(`#row-${productId}-${variantId}`).fadeOut(300, function() {
+                        $(this).remove();
+                        if ($('.cart-row').length === 0) location.reload();
+                    });
+                    $('.cart-count').text(res.cartCount);
+                }
+            });
+        }
+    </script>
+}
