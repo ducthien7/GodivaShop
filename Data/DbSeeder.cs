@@ -67,5 +67,59 @@ public static class DbSeeder
             });
             await context.SaveChangesAsync();
         }
+
+        // === Seed Products (ensure 4 products per category, add missing ones only) ===
+        {
+            var categoriesList = await context.Categories.ToListAsync();
+            var sampleImages = new[] { "~/images/products/sample1.svg", "~/images/products/sample2.svg", "~/images/products/sample3.svg" };
+            int imgIndex = 0;
+
+            foreach (var cat in categoriesList)
+            {
+                var existingCount = await context.Products.CountAsync(p => p.CategoryId == cat.Id);
+                if (existingCount >= 4) continue;
+
+                for (int idx = existingCount; idx < 4; idx++)
+                {
+                    var seq = idx + 1;
+                    var price = 150000 + (seq * 50000) + (cat.Id * 1000);
+                    var prod = new Product
+                    {
+                        Name = $"{cat.Name} Box {seq}",
+                        Description = $"{cat.Name} - Hộp quà số {seq} với các hương vị tuyển chọn.",
+                        Slug = $"{cat.Slug}-box-{seq}-{Guid.NewGuid().ToString().Substring(0, 6)}",
+                        BasePrice = price,
+                        IsBestSeller = (seq == 1 && existingCount == 0),
+                        IsActive = true,
+                        CategoryId = cat.Id
+                    };
+
+                    context.Products.Add(prod);
+                    await context.SaveChangesAsync(); // need Id for variant/image
+
+                    // Add one default variant
+                    context.ProductVariants.Add(new ProductVariant
+                    {
+                        ProductId = prod.Id,
+                        Name = "Hộp",
+                        Price = prod.BasePrice,
+                        StockQuantity = 50,
+                        IsActive = true
+                    });
+
+                    // Add one image (rotate sample images)
+                    context.ProductImages.Add(new ProductImage
+                    {
+                        ProductId = prod.Id,
+                        ImagePath = sampleImages[imgIndex % sampleImages.Length],
+                        IsMain = true,
+                        DisplayOrder = 0
+                    });
+
+                    imgIndex++;
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
     }
 }
