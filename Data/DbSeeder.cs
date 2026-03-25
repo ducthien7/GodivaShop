@@ -1,6 +1,8 @@
 ﻿using GodivaShop.Web.Models.Domain;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace GodivaShop.Web.Data;
 
@@ -53,6 +55,8 @@ public static class DbSeeder
             context.Categories.AddRange(categories);
             await context.SaveChangesAsync();
         }
+
+        // (No image assignment logic) — keep seeder minimal
 
         // === Seed Coupon ===
         if (!await context.Coupons.AnyAsync())
