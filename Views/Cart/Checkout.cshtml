@@ -42,6 +42,17 @@
             color: #999;
             margin-bottom: 1.5rem;
         }
+        .payment-methods .form-check-input:checked {
+    background-color: var(--gold);
+    border-color: var(--gold);
+}
+.payment-methods .form-check {
+    cursor: pointer;
+    padding-left: 2.5rem;
+}
+.payment-methods .form-check-label {
+    cursor: pointer;
+}
     </style>
 }
 
@@ -160,6 +171,39 @@
                         <div id="couponMsg" class="coupon-result"></div>
                     </div>
                 </div>
+
+                <div class="col-12 mt-4">
+    <p class="step-header">
+        <i class="fa fa-credit-card me-2 text-gold"></i>
+        Phương Thức Thanh Toán
+    </p>
+    <div class="payment-methods p-3" style="border: 1px solid #e0e0e0; background: #fafafa;">
+        
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payCOD" value="COD" checked>
+            <label class="form-check-label d-flex align-items-center" for="payCOD">
+                <i class="fa fa-truck text-muted me-2" style="width: 20px;"></i>
+                <div>
+                    <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán khi nhận hàng (COD)</span>
+                    <small class="text-muted" style="font-size: 0.75rem;">Thanh toán bằng tiền mặt khi shipper giao hàng đến.</small>
+                </div>
+            </label>
+        </div>
+
+        <hr style="border-color: #eee;">
+
+        <div class="form-check">
+            <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payVNPay" value="VNPAY">
+            <label class="form-check-label d-flex align-items-center" for="payVNPay">
+                <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/9/ad918b1d44834771966514713bc18efe.svg" alt="VNPay" class="me-2" style="height: 18px;">
+                <div>
+                    <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán qua VNPay</span>
+                    <small class="text-muted" style="font-size: 0.75rem;">Thanh toán nhanh chóng qua QR Code hoặc thẻ ATM/Quốc tế.</small>
+                </div>
+            </label>
+        </div>
+    </div>
+</div>
 
                 <button type="submit"
                         class="btn btn-gold w-100 py-3 mt-4"

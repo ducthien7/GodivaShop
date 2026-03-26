@@ -3,6 +3,7 @@ using GodivaShop.Web.Hubs;
 using GodivaShop.Web.Models.Domain;
 using GodivaShop.Web.Models.ViewModels;
 using GodivaShop.Web.Services;
+using GodivaShop.Web.Helpers; // Đảm bảo có dòng này để dùng VnPayLibrary
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -17,16 +18,18 @@ public class CartController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly EmailService _emailService;
     private readonly IHubContext<OrderHub> _hubContext;
+    private readonly IConfiguration _configuration; // Thêm config để đọc appsettings
 
     public CartController(CartService cart, ApplicationDbContext db,
         UserManager<ApplicationUser> userManager, EmailService emailService,
-        IHubContext<OrderHub> hubContext)
+        IHubContext<OrderHub> hubContext, IConfiguration configuration)
     {
         _cart = cart;
         _db = db;
         _userManager = userManager;
         _emailService = emailService;
         _hubContext = hubContext;
+        _configuration = configuration;
     }
 
     public IActionResult Index()
@@ -38,14 +41,8 @@ public class CartController : Controller
     [HttpPost]
     public IActionResult UpdateQuantity(int productId, int? variantId, int quantity)
     {
-        if (quantity <= 0)
-        {
-            _cart.RemoveItem(productId, variantId);
-        }
-        else
-        {
-            _cart.UpdateQuantity(productId, variantId, quantity);
-        }
+        if (quantity <= 0) _cart.RemoveItem(productId, variantId);
+        else _cart.UpdateQuantity(productId, variantId, quantity);
         return Json(new { success = true, cartCount = _cart.GetCartCount() });
     }
 
@@ -53,14 +50,9 @@ public class CartController : Controller
     public IActionResult Remove(int productId, int? variantId)
     {
         _cart.RemoveItem(productId, variantId);
-        return Json(new
-        {
-            success = true,
-            cartCount = _cart.GetCartCount()
-        });
+        return Json(new { success = true, cartCount = _cart.GetCartCount() });
     }
 
-    // Trang thanh toán
     public async Task<IActionResult> Checkout()
     {
         ViewBag.CartCount = _cart.GetCartCount();
@@ -102,19 +94,16 @@ public class CartController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> PlaceOrder(CheckoutViewModel vm)
+    public IActionResult PlaceOrder(CheckoutViewModel vm)
     {
-        if (!ModelState.IsValid)
-            return View("Checkout", vm);
+        if (!ModelState.IsValid) return View("Checkout", vm);
 
         var cartItems = _cart.GetCart();
-        if (!cartItems.Any())
-            return RedirectToAction("Index");
+        if (!cartItems.Any()) return RedirectToAction("Index");
 
-        // Lưu thông tin checkout vào Session để dùng lại ở ConfirmPayment
+        // Lưu thông tin vào Session
         HttpContext.Session.SetString("CheckoutInfo", JsonConvert.SerializeObject(vm));
 
-        // Tính toán thông tin thanh toán
         decimal totalAmount = cartItems.Sum(x => x.Subtotal);
         decimal discountAmount = 0;
 
@@ -129,7 +118,6 @@ public class CartController : Controller
             }
         }
 
-        // Lưu thông tin thanh toán vào ViewBag để hiển thị trên trang xác nhận
         ViewBag.TotalAmount = totalAmount;
         ViewBag.DiscountAmount = discountAmount;
         ViewBag.FinalAmount = totalAmount - discountAmount;
@@ -139,45 +127,6 @@ public class CartController : Controller
         return View("ConfirmPayment");
     }
 
-    // Trang xác nhận thanh toán
-    public async Task<IActionResult> ConfirmPayment()
-    {
-        var cartItems = _cart.GetCart();
-        if (!cartItems.Any())
-            return RedirectToAction("Index");
-
-        // Lấy thông tin checkout từ Session
-        var checkoutInfoJson = HttpContext.Session.GetString("CheckoutInfo");
-        if (string.IsNullOrEmpty(checkoutInfoJson))
-            return RedirectToAction("Checkout");
-
-        var vm = JsonConvert.DeserializeObject<CheckoutViewModel>(checkoutInfoJson);
-
-        // Tính toán
-        decimal totalAmount = cartItems.Sum(x => x.Subtotal);
-        decimal discountAmount = 0;
-
-        if (!string.IsNullOrEmpty(vm?.CouponCode))
-        {
-            var coupon = _db.Coupons.FirstOrDefault(c => c.Code == vm.CouponCode && c.IsActive);
-            if (coupon != null)
-            {
-                discountAmount = coupon.DiscountType == DiscountType.Percentage
-                    ? totalAmount * coupon.DiscountValue / 100
-                    : coupon.DiscountValue;
-            }
-        }
-
-        ViewBag.TotalAmount = totalAmount;
-        ViewBag.DiscountAmount = discountAmount;
-        ViewBag.FinalAmount = totalAmount - discountAmount;
-        ViewBag.CartItems = cartItems;
-        ViewBag.CheckoutInfo = vm;
-
-        return View();
-    }
-
-    // Xác nhận và tạo order
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ProcessPayment()
@@ -185,19 +134,15 @@ public class CartController : Controller
         try
         {
             var cartItems = _cart.GetCart();
-            if (!cartItems.Any())
-                return RedirectToAction("Index");
+            if (!cartItems.Any()) return RedirectToAction("Index");
 
-            // Lấy thông tin checkout từ Session
             var checkoutInfoJson = HttpContext.Session.GetString("CheckoutInfo");
-            if (string.IsNullOrEmpty(checkoutInfoJson))
-                return RedirectToAction("Checkout");
+            if (string.IsNullOrEmpty(checkoutInfoJson)) return RedirectToAction("Checkout");
 
             var vm = JsonConvert.DeserializeObject<CheckoutViewModel>(checkoutInfoJson);
-            if (vm == null)
-                return RedirectToAction("Checkout");
+            if (vm == null) return RedirectToAction("Checkout");
 
-            // Tạo Order
+            // TẠO ĐƠN HÀNG
             var order = new Order
             {
                 GuestFullName = vm.FullName,
@@ -207,9 +152,12 @@ public class CartController : Controller
                 Note = vm.Note,
                 CouponCode = vm.CouponCode,
                 TotalAmount = cartItems.Sum(x => x.Subtotal),
+                PaymentMethod = vm.PaymentMethod,
+                IsPaid = false,
+                OrderDate = DateTime.Now,
+                Status = OrderStatus.Pending
             };
 
-            // Áp dụng coupon
             if (!string.IsNullOrEmpty(vm.CouponCode))
             {
                 var coupon = _db.Coupons.FirstOrDefault(c => c.Code == vm.CouponCode && c.IsActive);
@@ -222,14 +170,12 @@ public class CartController : Controller
                 }
             }
 
-            // Gán UserId nếu đã đăng nhập
             if (User.Identity?.IsAuthenticated == true)
             {
                 var user = await _userManager.GetUserAsync(User);
                 order.UserId = user?.Id;
             }
 
-            // OrderItems
             foreach (var item in cartItems)
             {
                 order.OrderItems.Add(new OrderItem
@@ -245,80 +191,88 @@ public class CartController : Controller
             _db.Orders.Add(order);
             await _db.SaveChangesAsync();
 
-            // Verify order was created
-            if (order.Id <= 0)
-                return BadRequest("Không thể tạo đơn hàng");
+            // RẼ NHÁNH XỬ LÝ THANH TOÁN
+            if (order.PaymentMethod == "VNPAY")
+            {
+                var vnpay = new VnPayLibrary();
+                var vnp_TmnCode = _configuration["VnPay:TmnCode"];
+                var vnp_HashSecret = _configuration["VnPay:HashSecret"];
+                var vnp_Url = _configuration["VnPay:BaseUrl"];
 
-            // Gửi email xác nhận
-            try
-            {
-                await _emailService.SendOrderConfirmationAsync(
-                    order.GuestEmail, order.GuestFullName, order.Id, order.TotalAmount - order.DiscountAmount);
-            }
-            catch
-            {
-                // Email sending failure should not block order creation
-            }
+                vnpay.AddRequestData("vnp_Version", "2.1.0");
+                vnpay.AddRequestData("vnp_Command", "pay");
+                vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
+                vnpay.AddRequestData("vnp_Amount", ((long)((order.TotalAmount - order.DiscountAmount) * 100)).ToString());
+                vnpay.AddRequestData("vnp_CreateDate", order.OrderDate.ToString("yyyyMMddHHmmss"));
+                vnpay.AddRequestData("vnp_CurrCode", "VND");
+                vnpay.AddRequestData("vnp_IpAddr", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+                vnpay.AddRequestData("vnp_Locale", "vn");
+                vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang Godiva #" + order.Id);
+                vnpay.AddRequestData("vnp_OrderType", "other");
+                vnpay.AddRequestData("vnp_ReturnUrl", Url.Action("PaymentCallback", "Cart", null, Request.Scheme));
+                vnpay.AddRequestData("vnp_TxnRef", order.Id.ToString());
 
-            // SignalR: Thông báo Admin
-            try
-            {
-                await _hubContext.Clients.Group("AdminGroup")
-                    .SendAsync("NewOrder", new
-                    {
-                        orderId = order.Id,
-                        customerName = order.GuestFullName,
-                        amount = order.TotalAmount - order.DiscountAmount,
-                        isGuest = order.UserId == null
-                    });
-            }
-            catch
-            {
-                // SignalR failure should not block order creation
+                return Redirect(vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret));
             }
 
-            _cart.ClearCart();
-            HttpContext.Session.Remove("CheckoutInfo");
-
+            // Mặc định là COD
+            await CompleteOrderLogic(order);
             return RedirectToAction("PaymentSuccess", new { id = order.Id });
         }
         catch (Exception ex)
         {
-            return BadRequest($"Lỗi khi xử lý thanh toán: {ex.Message}");
+            return BadRequest($"Lỗi: {ex.Message}");
         }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> PaymentCallback()
+    {
+        var vnpay = new VnPayLibrary();
+        var vnp_HashSecret = _configuration["VnPay:HashSecret"];
+
+        foreach (var (key, value) in Request.Query)
+        {
+            if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_"))
+                vnpay.AddResponseData(key, value);
+        }
+
+        string orderIdStr = vnpay.GetResponseData("vnp_TxnRef");
+        string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
+        string vnp_SecureHash = Request.Query["vnp_SecureHash"];
+
+        if (vnpay.ValidateSignature(vnp_SecureHash, vnp_HashSecret) && vnp_ResponseCode == "00")
+        {
+            var order = await _db.Orders.FindAsync(int.Parse(orderIdStr));
+            if (order != null)
+            {
+                order.IsPaid = true;
+                order.Status = OrderStatus.Confirmed;
+                await _db.SaveChangesAsync();
+                await CompleteOrderLogic(order);
+                return RedirectToAction("PaymentSuccess", new { id = order.Id });
+            }
+        }
+        return RedirectToAction("PaymentFailed");
+    }
+
+    private async Task CompleteOrderLogic(Order order)
+    {
+        _cart.ClearCart();
+        HttpContext.Session.Remove("CheckoutInfo");
+        try
+        {
+            await _emailService.SendOrderConfirmationAsync(order.GuestEmail, order.GuestFullName, order.Id, order.TotalAmount - order.DiscountAmount);
+            await _hubContext.Clients.Group("AdminGroup").SendAsync("NewOrder", new { orderId = order.Id, customerName = order.GuestFullName, amount = order.TotalAmount - order.DiscountAmount });
+        }
+        catch { }
     }
 
     public IActionResult PaymentSuccess(int id)
     {
-        if (id <= 0)
-            return BadRequest("Mã đơn hàng không hợp lệ");
-
-        ViewBag.OrderId = id;
-
-        // Verify order exists in database
         var order = _db.Orders.Find(id);
-        if (order == null)
-        {
-            return BadRequest($"Không tìm thấy đơn hàng #{id}");
-        }
-
+        if (order == null) return BadRequest("Đơn hàng không tồn tại");
+        ViewBag.OrderId = id;
         return View();
-    }
-
-    // Diagnostic endpoint - helps debug the payment flow
-    [HttpGet]
-    public IActionResult PaymentDiagnostic()
-    {
-        var cartItems = _cart.GetCart();
-        var checkoutInfo = HttpContext.Session.GetString("CheckoutInfo");
-
-        return Json(new
-        {
-            timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"),
-            cartItemsCount = cartItems.Count,
-            hasCheckoutInfo = !string.IsNullOrEmpty(checkoutInfo),
-            sessionId = HttpContext.Session.Id,
-            lastOrders = _db.Orders.OrderByDescending(o => o.OrderDate).Take(5).Select(o => new { o.Id, o.GuestFullName, o.OrderDate, o.TotalAmount }).ToList()
-        });
     }
 }
