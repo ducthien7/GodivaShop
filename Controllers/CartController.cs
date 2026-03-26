@@ -37,7 +37,14 @@ public class CartController : Controller
     [HttpPost]
     public IActionResult UpdateQuantity(int productId, int? variantId, int quantity)
     {
-        _cart.UpdateQuantity(productId, variantId, quantity);
+        if (quantity <= 0)
+        {
+            _cart.RemoveItem(productId, variantId);
+        }
+        else
+        {
+            _cart.UpdateQuantity(productId, variantId, quantity);
+        }
         return Json(new { success = true, cartCount = _cart.GetCartCount() });
     }
 
@@ -45,7 +52,11 @@ public class CartController : Controller
     public IActionResult Remove(int productId, int? variantId)
     {
         _cart.RemoveItem(productId, variantId);
-        return Json(new { success = true, cartCount = _cart.GetCartCount() });
+        return Json(new
+        {
+            success = true,
+            cartCount = _cart.GetCartCount()
+        });
     }
 
     // Trang thanh toán

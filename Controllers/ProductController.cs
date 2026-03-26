@@ -18,6 +18,38 @@ public class ProductController : Controller
     }
 
     // Trang danh mục
+    public async Task<IActionResult> Category(
+   string? slug, decimal? minPrice, decimal? maxPrice, string? search)
+    {
+        ViewBag.CartCount = _cart.GetCartCount();
+        ViewBag.Categories = await _db.Categories
+            .Where(c => c.IsActive).ToListAsync();
+
+        var query = _db.Products
+            .Include(p => p.Images)
+            .Include(p => p.Category)
+            .Where(p => p.IsActive);
+
+        if (!string.IsNullOrEmpty(slug))
+            query = query.Where(p => p.Category.Slug == slug);
+
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(p =>
+                p.Name.Contains(search) ||
+                (p.Description != null && p.Description.Contains(search)));
+
+        if (minPrice.HasValue)
+            query = query.Where(p => p.BasePrice >= minPrice);
+
+        if (maxPrice.HasValue)
+            query = query.Where(p => p.BasePrice <= maxPrice);
+
+        ViewBag.CurrentSlug = slug;
+        ViewBag.SearchTerm = search;
+
+        return View(await query.ToListAsync());
+    }
+    /*
     public async Task<IActionResult> Category(string? slug, decimal? minPrice, decimal? maxPrice)
     {
         ViewBag.CartCount = _cart.GetCartCount();
@@ -40,7 +72,7 @@ public class ProductController : Controller
         ViewBag.CurrentSlug = slug;
         return View(products);
     }
-
+    */
     // Trang chi tiết sản phẩm
     public async Task<IActionResult> Detail(int id)
     {
@@ -71,4 +103,5 @@ public class ProductController : Controller
         _cart.AddItem(item);
         return Json(new { success = true, cartCount = _cart.GetCartCount() });
     }
+   
 }

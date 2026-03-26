@@ -45,13 +45,18 @@ public class CartService
     public void UpdateQuantity(int productId, int? variantId, int quantity)
     {
         var cart = GetCart();
+        // So sánh null-safe
         var item = cart.FirstOrDefault(x =>
-            x.ProductId == productId && x.VariantId == variantId);
+            x.ProductId == productId &&
+            ((x.VariantId == null && variantId == null) ||
+             (x.VariantId != null && variantId != null && x.VariantId == variantId)));
 
         if (item != null)
         {
-            if (quantity <= 0) cart.Remove(item);
-            else item.Quantity = quantity;
+            if (quantity <= 0)
+                cart.Remove(item);
+            else
+                item.Quantity = quantity;
         }
         SaveCart(cart);
     }
@@ -59,7 +64,15 @@ public class CartService
     public void RemoveItem(int productId, int? variantId)
     {
         var cart = GetCart();
-        cart.RemoveAll(x => x.ProductId == productId && x.VariantId == variantId);
+        // So sánh null-safe
+        var item = cart.FirstOrDefault(x =>
+            x.ProductId == productId &&
+            ((x.VariantId == null && variantId == null) ||
+             (x.VariantId != null && variantId != null && x.VariantId == variantId)));
+
+        if (item != null)
+            cart.Remove(item);
+
         SaveCart(cart);
     }
 

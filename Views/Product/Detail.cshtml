@@ -134,32 +134,75 @@
 
         // Thêm vào giỏ - AJAX
         function addToCart(productId) {
+            // Lấy giá từ text, bỏ ký tự không phải số
+            const priceText = document.getElementById('priceDisplay').innerText;
+            const price = parseFloat(priceText.replace(/[^0-9]/g, ''));
+
             const data = {
                 productId: productId,
-                variantId: selectedVariantId,
-                variantName: selectedVariantId ? $('.variant-btn.active').text().trim() : null,
+                variantId: selectedVariantId || null,
+                variantName: selectedVariantId
+                    ? document.querySelector('.variant-btn.active')?.innerText.trim()
+                    : null,
                 quantity: 1,
-                unitPrice: parseFloat($('#priceDisplay').text().replace(/[^0-9]/g, '')),
-                productName: '@Model.Name',
-                productImage: $('#mainImage').attr('src'),
-                giftMessage: $('#giftMessage').val()
+                unitPrice: price,
+                productName: '@Html.Raw(Model.Name.Replace("'", "\\'"))',
+                productImage: document.getElementById('mainImage').src,
+                giftMessage: document.getElementById('giftMessage').value
             };
 
-            $.ajax({
-                url: '/Product/AddToCart',
+            fetch('/Product/AddToCart', {
                 method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(res) {
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(r => r.json())
+                .then(res => {
                     if (res.success) {
-                        $('.cart-count').text(res.cartCount).show();
+                        // ✅ Cập nhật tất cả cart-count badge trên trang
+                        const badges = document.querySelectorAll('.cart-count');
+                        if (res.cartCount > 0) {
+                            if (badges.length > 0) {
+                                badges.forEach(b => {
+                                    b.textContent = res.cartCount;
+                                    b.style.display = 'flex';
+                                });
+                            } else {
+                                // Tạo badge mới nếu chưa có
+                                const cartIcon = document.querySelector('a[href*="Cart"] .fa-shopping-bag')
+                                    ?? document.querySelector('.nav-icon .fa-shopping-bag');
+                                if (cartIcon) {
+                                    const badge = document.createElement('span');
+                                    badge.className = 'cart-count';
+                                    badge.textContent = res.cartCount;
+                                    cartIcon.parentElement.appendChild(badge);
+                                }
+                            }
+                        }
+
                         // Toast thông báo
-                        const toast = $('<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999"><div class="toast show" style="border-left:3px solid var(--gold)"><div class="toast-body">✓ Đã thêm vào giỏ hàng!</div></div></div>');
-                        $('body').append(toast);
-                        setTimeout(() => toast.remove(), 2500);
+                        showToast('✓ Đã thêm vào giỏ hàng!');
                     }
-                }
-            });
+                })
+                .catch(err => console.error('AddToCart error:', err));
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position:fixed; bottom:24px; right:24px; z-index:9999;
+                background:#1a1a1a; color:#fff; padding:12px 20px;
+                border-left:3px solid var(--gold); font-size:0.85rem;
+                box-shadow:0 4px 15px rgba(0,0,0,0.2);
+                animation: slideUp 0.3s ease;
+            `;
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
         }
     </script>
 }
