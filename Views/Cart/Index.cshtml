@@ -56,44 +56,57 @@
                     <tbody id="cartBody">
                         @foreach (var item in Model)
                         {
-                            <tr class="cart-row" id="row-@item.ProductId-@item.VariantId">
+                            var rowId = $"{item.ProductId}-{item.VariantId?.ToString() ?? "null"}";
+                            <tr class="cart-row"
+                                id="row-@rowId"
+                                data-price="@item.UnitPrice">
                                 <td>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <img src="@item.ProductImage" class="cart-img"
+                                    <div class="d-flex gap-3">
+                                        <img src="@Url.Content(item.ProductImage)" 
+                                             alt="@item.ProductName"
+                                             class="cart-img"
                                              onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=80'">
                                         <div>
-                                            <p class="serif mb-1 fw-semibold" style="font-size:0.9rem;">@item.ProductName</p>
+                                            <a asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId"
+                                               style="color: inherit; text-decoration: none;">
+                                                <h6 class="mb-2 fw-semibold" style="font-size: 0.95rem;">@item.ProductName</h6>
+                                            </a>
                                             @if (!string.IsNullOrEmpty(item.VariantName))
                                             {
-                                                <p class="text-muted small mb-1">@item.VariantName</p>
+                                                <p class="text-muted mb-0" style="font-size: 0.85rem;">@item.VariantName</p>
                                             }
-                                            @if (!string.IsNullOrEmpty(item.GiftMessage))
-                                            {
-                                                <p class="small mb-0" style="color:var(--gold); font-style:italic;">
-                                                    "💌 @item.GiftMessage"
-                                                </p>
-                                            }
-                                            <p class="text-gold small mb-0">@item.UnitPrice.ToString("N0") VNĐ</p>
+                                            <p class="text-gold fw-semibold mt-1" style="font-size: 0.9rem;">
+                                                @item.UnitPrice.ToString("N0")đ
+                                            </p>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <button class="qty-btn" onclick="changeQty(@item.ProductId, @(item.VariantId?.ToString() ?? "null"), -1)">−</button>
-                                        <input type="number" class="qty-input" value="@item.Quantity" min="1"
-                                               onchange="updateQty(@item.ProductId, @(item.VariantId?.ToString() ?? "null"), this.value)"
-                                               id="qty-@item.ProductId-@item.VariantId">
-                                        <button class="qty-btn" onclick="changeQty(@item.ProductId, @(item.VariantId?.ToString() ?? "null"), 1)">+</button>
+                                        <button class="qty-btn"
+                                                onclick="changeQty(@item.ProductId, '@(item.VariantId?.ToString() ?? "null")', -1)">
+                                            −
+                                        </button>
+                                        <input type="number"
+                                               class="qty-input"
+                                               value="@item.Quantity"
+                                               min="1"
+                                               id="qty-@(item.ProductId)-@(item.VariantId?.ToString() ?? "null")"
+                                               onchange="updateQty(@item.ProductId, '@(item.VariantId?.ToString() ?? "null")', this.value)">
+                                        <button class="qty-btn"
+                                                onclick="changeQty(@item.ProductId, '@(item.VariantId?.ToString() ?? "null")', 1)">
+                                            +
+                                        </button>
                                     </div>
                                 </td>
                                 <td class="text-end">
-                                    <span class="fw-semibold text-gold" id="subtotal-@item.ProductId-@item.VariantId">
+                                    <span class="fw-semibold text-gold">
                                         @item.Subtotal.ToString("N0") VNĐ
                                     </span>
                                 </td>
                                 <td class="text-end">
                                     <button class="remove-btn"
-                                            onclick="removeItem(@item.ProductId, @(item.VariantId?.ToString() ?? "null"))">
+                                            onclick="removeItem(@item.ProductId, '@(item.VariantId?.ToString() ?? "null")')">
                                         <i class="fa fa-times"></i>
                                     </button>
                                 </td>
@@ -143,38 +156,128 @@
 
 @section Scripts {
     <script>
+        // Helper: lấy CSRF token
+        function getToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+        }
+
+        // Helper: parse variantId an toàn
+        function parseVariantId(val) {
+            if (val === null || val === undefined || val === '' || val === 'null')
+                return null;
+            const n = parseInt(val);
+            return isNaN(n) ? null : n;
+        }
+
         function changeQty(productId, variantId, delta) {
-            const input = $(`#qty-${productId}-${variantId}`);
-            const newVal = Math.max(1, parseInt(input.val()) + delta);
-            input.val(newVal);
+            variantId = parseVariantId(variantId);
+            const key = `qty-${productId}-${variantId}`;
+            const input = document.getElementById(key);
+            if (!input) return;
+
+            const newVal = Math.max(1, parseInt(input.value) + delta);
+            input.value = newVal;
             updateQty(productId, variantId, newVal);
         }
 
         function updateQty(productId, variantId, quantity) {
+            variantId = parseVariantId(variantId);
             quantity = parseInt(quantity);
-            if (quantity < 1) { removeItem(productId, variantId); return; }
-            $.post('/Cart/UpdateQuantity', {
-                productId, variantId: variantId === 'null' ? null : variantId, quantity
-            }, function(res) {
-                if (res.success) {
-                    location.reload(); // Reload để cập nhật tổng tiền chính xác
-                }
-            });
+
+            if (quantity < 1) {
+                removeItem(productId, variantId);
+                return;
+            }
+
+            // Update row subtotal immediately (optimistic update)
+            updateRowSubtotal(productId, variantId, quantity);
+
+            fetch('/Cart/UpdateQuantity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': getToken()
+                },
+                body: `productId=${productId}&variantId=${variantId ?? ''}&quantity=${quantity}`
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        updateCartBadge(res.cartCount);
+                        recalcTotal();
+                    }
+                })
+                .catch(err => console.error('UpdateQty error:', err));
+        }
+
+        function updateRowSubtotal(productId, variantId, quantity) {
+            const rowKey = `${productId}-${variantId}`;
+            const row = document.getElementById(`row-${rowKey}`);
+            if (!row) return;
+
+            const price = parseFloat(row.dataset.price ?? 0);
+            const subtotal = price * quantity;
+            const subtotalSpan = row.querySelector('span.text-gold');
+            if (subtotalSpan) {
+                subtotalSpan.textContent = subtotal.toLocaleString('vi-VN') + ' VNĐ';
+            }
         }
 
         function removeItem(productId, variantId) {
+            variantId = parseVariantId(variantId);
             if (!confirm('Xóa sản phẩm này khỏi giỏ hàng?')) return;
-            $.post('/Cart/Remove', {
-                productId, variantId: variantId === 'null' ? null : variantId
-            }, function(res) {
-                if (res.success) {
-                    $(`#row-${productId}-${variantId}`).fadeOut(300, function() {
-                        $(this).remove();
-                        if ($('.cart-row').length === 0) location.reload();
-                    });
-                    $('.cart-count').text(res.cartCount);
-                }
+
+            fetch('/Cart/Remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': getToken()
+                },
+                body: `productId=${productId}&variantId=${variantId ?? ''}`
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        // Xóa dòng khỏi bảng
+                        const rowKey = `${productId}-${variantId}`;
+                        const row = document.getElementById(`row-${rowKey}`);
+                        if (row) {
+                            row.style.transition = 'opacity 0.3s';
+                            row.style.opacity = '0';
+                            setTimeout(() => {
+                                row.remove();
+                                // Nếu giỏ trống thì reload
+                                if (document.querySelectorAll('.cart-row').length === 0)
+                                    location.reload();
+                                else
+                                    recalcTotal();
+                            }, 300);
+                        }
+                        updateCartBadge(res.cartCount);
+                    }
+                })
+                .catch(err => console.error('Remove error:', err));
+        }
+
+        function updateCartBadge(count) {
+            document.querySelectorAll('.cart-count').forEach(b => {
+                b.textContent = count;
+                b.style.display = count > 0 ? 'flex' : 'none';
             });
+        }
+
+        function recalcTotal() {
+            let total = 0;
+            document.querySelectorAll('.cart-row').forEach(row => {
+                const price = parseFloat(row.dataset.price ?? 0);
+                const qty = parseInt(row.querySelector('input[type=number]')?.value ?? 1);
+                total += price * qty;
+            });
+            const fmt = total.toLocaleString('vi-VN');
+            const el = document.getElementById('grandTotal');
+            if (el) el.textContent = fmt + ' VNĐ';
+            const el2 = document.getElementById('cartTotal');
+            if (el2) el2.textContent = fmt + ' VNĐ';
         }
     </script>
 }

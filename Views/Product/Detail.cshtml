@@ -64,6 +64,24 @@
                 </div>
             }
 
+            <!-- CHỌN SỐ LƯỢNG -->
+            <div class="mb-4">
+                <p class="small text-uppercase" style="letter-spacing:2px; font-weight:600;">Số Lượng:</p>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-secondary" id="qtyDecBtn" 
+                            onclick="changeProductQty(-1)" style="width: 40px; height: 40px; padding: 0;">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                    <input type="number" id="productQty" class="form-control text-center" value="1" 
+                           min="1" style="width: 70px; padding: 8px 4px;"
+                           onchange="validateProductQty()">
+                    <button class="btn btn-outline-secondary" id="qtyIncBtn" 
+                            onclick="changeProductQty(1)" style="width: 40px; height: 40px; padding: 0;">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
             <!-- LỜI CHÚC QUÀ TẶNG -->
             <div class="mb-4">
                 <label class="small text-uppercase mb-2" style="letter-spacing:1px;">Lời Chúc (Tùy chọn)</label>
@@ -134,32 +152,113 @@
 
         // Thêm vào giỏ - AJAX
         function addToCart(productId) {
+            // Lấy giá từ text, bỏ ký tự không phải số
+            const priceText = document.getElementById('priceDisplay').innerText;
+            const price = parseFloat(priceText.replace(/[^0-9]/g, ''));
+
+            // Lấy ảnh từ mainImage
+            let productImage = document.getElementById('mainImage').src;
+            if (!productImage || productImage.includes('undefined')) {
+                productImage = '@Url.Content(Model.Images.FirstOrDefault()?.ImagePath ?? "~/images/no-image.jpg")';
+            }
+
+            // Lấy số lượng từ input
+            const quantity = parseInt(document.getElementById('productQty').value) || 1;
+
             const data = {
                 productId: productId,
-                variantId: selectedVariantId,
-                variantName: selectedVariantId ? $('.variant-btn.active').text().trim() : null,
-                quantity: 1,
-                unitPrice: parseFloat($('#priceDisplay').text().replace(/[^0-9]/g, '')),
-                productName: '@Model.Name',
-                productImage: $('#mainImage').attr('src'),
-                giftMessage: $('#giftMessage').val()
+                variantId: selectedVariantId || null,
+                variantName: selectedVariantId
+                    ? document.querySelector('.variant-btn.active')?.innerText.trim()
+                    : null,
+                quantity: quantity,
+                unitPrice: price,
+                productName: '@Html.Raw(Model.Name.Replace("'", "\\'"))',
+                productImage: productImage,
+                giftMessage: document.getElementById('giftMessage').value || ""
             };
 
-            $.ajax({
-                url: '/Product/AddToCart',
+            fetch('/Product/AddToCart', {
                 method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(res) {
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(r => r.json())
+                .then(res => {
                     if (res.success) {
-                        $('.cart-count').text(res.cartCount).show();
+                        // ✅ Cập nhật tất cả cart-count badge trên trang
+                        const badges = document.querySelectorAll('.cart-count');
+                        if (res.cartCount > 0) {
+                            if (badges.length > 0) {
+                                badges.forEach(b => {
+                                    b.textContent = res.cartCount;
+                                    b.style.display = 'flex';
+                                });
+                            } else {
+                                // Tạo badge mới nếu chưa có
+                                const cartIcon = document.querySelector('a[href*="Cart"] .fa-shopping-bag')
+                                    ?? document.querySelector('.nav-icon .fa-shopping-bag');
+                                if (cartIcon) {
+                                    const badge = document.createElement('span');
+                                    badge.className = 'cart-count';
+                                    badge.textContent = res.cartCount;
+                                    cartIcon.parentElement.appendChild(badge);
+                                }
+                            }
+                        }
+
+                        // Reset quantity để chuẩn bị lần thêm tiếp theo
+                        document.getElementById('productQty').value = 1;
+
                         // Toast thông báo
-                        const toast = $('<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999"><div class="toast show" style="border-left:3px solid var(--gold)"><div class="toast-body">✓ Đã thêm vào giỏ hàng!</div></div></div>');
-                        $('body').append(toast);
-                        setTimeout(() => toast.remove(), 2500);
+                        showToast('✓ Đã thêm vào giỏ hàng!');
+                    } else {
+                        showToast('❌ Lỗi khi thêm vào giỏ hàng!');
                     }
-                }
-            });
+                })
+                .catch(err => {
+                    console.error('AddToCart error:', err);
+                    showToast('❌ Lỗi khi thêm vào giỏ hàng!');
+                });
+        }
+
+        // Thay đổi số lượng trong product detail
+        function changeProductQty(delta) {
+            const input = document.getElementById('productQty');
+            const newValue = Math.max(1, parseInt(input.value) + delta);
+            input.value = newValue;
+        }
+
+        // Kiểm tra giá trị số lượng hợp lệ
+        function validateProductQty() {
+            const input = document.getElementById('productQty');
+            const value = parseInt(input.value);
+            if (isNaN(value) || value < 1) {
+                input.value = 1;
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            const isError = msg.includes('❌');
+            toast.style.cssText = `
+                position:fixed; bottom:24px; right:24px; z-index:9999;
+                background:${isError ? '#e74c3c' : '#1a1a1a'}; 
+                color:#fff; padding:14px 20px;
+                border-left:4px solid ${isError ? '#c0392b' : 'var(--gold)'}; 
+                font-size:0.9rem; font-weight:500;
+                box-shadow:0 4px 15px rgba(0,0,0,0.3);
+                animation: slideUp 0.3s ease;
+                border-radius: 2px;
+            `;
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
         }
     </script>
 }

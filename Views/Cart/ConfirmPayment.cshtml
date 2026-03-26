@@ -1,0 +1,163 @@
+@{
+    ViewData["Title"] = "Xác Nhận Thanh Toán";
+    var cartItems = (List<GodivaShop.Web.Models.ViewModels.CartItem>)ViewBag.CartItems;
+    var checkoutInfo = (GodivaShop.Web.Models.ViewModels.CheckoutViewModel)ViewBag.CheckoutInfo;
+    decimal totalAmount = (decimal)ViewBag.TotalAmount;
+    decimal discountAmount = (decimal)ViewBag.DiscountAmount;
+    decimal finalAmount = (decimal)ViewBag.FinalAmount;
+}
+
+@section Styles {
+    <style>
+        .payment-card { background: #fff; border: 1px solid #e0d5c5; padding: 2rem; margin-bottom: 1.5rem; }
+        .payment-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .payment-icon { width: 50px; height: 50px; background: var(--gold); display: flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; font-size: 1.5rem; }
+        .payment-info { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 1.5rem 0; }
+        .payment-info-item { border: 1px solid #f0f0f0; padding: 1rem; }
+        .payment-info-item h6 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 0.5rem; }
+        .payment-info-item p { margin: 0; font-size: 0.95rem; }
+        .order-items { margin-top: 1.5rem; }
+        .order-item { display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #f0f0f0; }
+        .order-item img { width: 60px; height: 60px; object-fit: cover; }
+        .order-item-info { flex: 1; }
+        .order-item-name { font-weight: 600; margin-bottom: 0.3rem; }
+        .order-item-variant { font-size: 0.85rem; color: #999; }
+        .price-summary { background: #faf8f5; padding: 1.5rem; margin-top: 2rem; }
+        .price-row { display: flex; justify-content: space-between; margin-bottom: 0.8rem; }
+        .price-row.total { border-top: 2px solid #ddd; padding-top: 1rem; margin-top: 1rem; font-size: 1.2rem; font-weight: 700; color: var(--gold); }
+        .btn-confirm { background: var(--gold); color: #fff; border: none; padding: 1rem 2rem; font-size: 1rem; letter-spacing: 1px; transition: all 0.3s; }
+        .btn-confirm:hover { opacity: 0.9; }
+        .btn-back { border: 1px solid #ddd; color: #333; padding: 1rem 2rem; background: #fff; }
+    </style>
+}
+
+<div class="container py-5">
+    <div class="row g-5">
+        <!-- CỘT TRÁI -->
+        <div class="col-md-7">
+            <!-- PAYMENT HEADER -->
+            <div class="payment-card">
+                <div class="payment-header">
+                    <div class="payment-icon">
+                        <i class="fa fa-lock"></i>
+                    </div>
+                    <div>
+                        <h3 class="serif mb-0">Xác Nhận Thanh Toán</h3>
+                        <p class="text-muted small mb-0">Vui lòng kiểm tra thông tin trước khi xác nhận</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THÔNG TIN GIAO HÀNG -->
+            <div class="payment-card">
+                <h5 class="serif mb-3">Thông Tin Giao Hàng</h5>
+                <div class="payment-info">
+                    <div class="payment-info-item">
+                        <h6>Họ và Tên</h6>
+                        <p>@checkoutInfo.FullName</p>
+                    </div>
+                    <div class="payment-info-item">
+                        <h6>Email</h6>
+                        <p>@checkoutInfo.Email</p>
+                    </div>
+                    <div class="payment-info-item">
+                        <h6>Số Điện Thoại</h6>
+                        <p>@checkoutInfo.Phone</p>
+                    </div>
+                    <div class="payment-info-item">
+                        <h6>Địa Chỉ Giao Hàng</h6>
+                        <p>@checkoutInfo.ShippingAddress</p>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(checkoutInfo.Note))
+                {
+                    <div style="background: #f9f9f9; padding: 1rem; margin-top: 1rem; border-left: 3px solid var(--gold);">
+                        <h6 style="font-size: 0.8rem; text-transform: uppercase; color: #999;">Ghi Chú</h6>
+                        <p class="mb-0">@checkoutInfo.Note</p>
+                    </div>
+                }
+            </div>
+
+            <!-- ĐƠN HÀNG -->
+            <div class="payment-card">
+                <h5 class="serif mb-3">Chi Tiết Đơn Hàng</h5>
+                <div class="order-items">
+                    @foreach (var item in cartItems)
+                    {
+                        <div class="order-item">
+                            <img src="@Url.Content(item.ProductImage)" 
+                                 alt="@item.ProductName"
+                                 onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=60'">
+                            <div class="order-item-info">
+                                <div class="order-item-name">@item.ProductName</div>
+                                @if (!string.IsNullOrEmpty(item.VariantName))
+                                {
+                                    <div class="order-item-variant">@item.VariantName</div>
+                                }
+                                <div class="text-muted small">x@item.Quantity</div>
+                            </div>
+                            <div class="text-gold fw-semibold">
+                                @item.Subtotal.ToString("N0")đ
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: TỔNG TIỀN -->
+        <div class="col-md-5">
+            <div class="price-summary">
+                <h5 class="serif mb-3">Tổng Hóa Đơn</h5>
+
+                <div class="price-row">
+                    <span>Tạm Tính:</span>
+                    <span>@totalAmount.ToString("N0")đ</span>
+                </div>
+
+                @if (discountAmount > 0)
+                {
+                    <div class="price-row">
+                        <span>Giảm Giá (@checkoutInfo.CouponCode):</span>
+                        <span style="color: #27ae60;">-@discountAmount.ToString("N0")đ</span>
+                    </div>
+                }
+
+                <div class="price-row total">
+                    <span>Thành Tiền:</span>
+                    <span>@finalAmount.ToString("N0")đ</span>
+                </div>
+
+                <!-- BUTTONS -->
+                <div class="d-grid gap-2 mt-4">
+                    <form method="post" asp-action="ProcessPayment" id="paymentForm">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-confirm w-100" id="submitBtn">
+                            <i class="fa fa-check me-2"></i>Xác Nhận Thanh Toán
+                        </button>
+                    </form>
+                    <a asp-action="Checkout" class="btn btn-back w-100">
+                        <i class="fa fa-arrow-left me-2"></i>Quay Lại Chỉnh Sửa
+                    </a>
+                </div>
+
+                <script>
+                    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+                        // Disable submit button to prevent double submission
+                        const btn = document.getElementById('submitBtn');
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Đang xử lý...';
+                    });
+                </script>
+
+                <!-- SECURITY INFO -->
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0d5c5; text-align: center;">
+                    <p class="text-muted small" style="font-size: 0.8rem;">
+                        <i class="fa fa-shield-alt me-1"></i>
+                        Thông tin của bạn được bảo vệ an toàn
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

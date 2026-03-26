@@ -58,6 +58,7 @@ builder.Services.AddHttpContextAccessor();
 // === Services ===
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<BestSellerService>();
 
 // === SignalR ===
 builder.Services.AddSignalR();

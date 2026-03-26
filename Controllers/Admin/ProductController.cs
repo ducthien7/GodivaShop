@@ -310,4 +310,19 @@ public class ProductController : Controller
             .Replace("ỳ", "y").Replace("ý", "y").Replace("ỷ", "y")
             .Replace("ỹ", "y").Replace("ỵ", "y");
     }
+
+    // Toggle Best Seller status
+    [HttpPost]
+    public async Task<IActionResult> ToggleBestSeller(int id)
+    {
+        var product = await _db.Products.FindAsync(id);
+        if (product == null)
+            return Json(new { success = false, message = "Sản phẩm không tồn tại" });
+
+        product.IsBestSeller = !product.IsBestSeller;
+        _db.Products.Update(product);
+        await _db.SaveChangesAsync();
+
+        return Json(new { success = true, isBestSeller = product.IsBestSeller });
+    }
 }

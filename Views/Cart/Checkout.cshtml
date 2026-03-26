@@ -1,0 +1,286 @@
+﻿@model GodivaShop.Web.Models.ViewModels.CheckoutViewModel
+@{
+    ViewData["Title"] = "Thanh Toán";
+}
+
+@section Styles {
+    <style>
+        .checkout-form .form-control {
+            border-radius: 0;
+            border: 1px solid #e0e0e0;
+            font-size: 0.875rem;
+            padding: 10px 14px;
+        }
+        .checkout-form .form-control:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(193,163,94,0.1);
+        }
+        .checkout-form .form-label {
+            font-size: 0.72rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .order-summary {
+            background: #faf8f5;
+            padding: 2rem;
+            position: sticky;
+            top: 90px;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+        .coupon-result { font-size: 0.8rem; margin-top: 6px; }
+        .step-header {
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+}
+
+<div class="container py-5">
+    <h2 class="serif text-center mb-2"
+        style="font-size:2rem;">
+        Thanh Toán
+    </h2>
+    <p class="text-center text-muted mb-5"
+       style="font-size:0.72rem; letter-spacing:3px; text-transform:uppercase;">
+        Hoàn tất đơn hàng của bạn
+    </p>
+
+    @if (!Model.CartItems.Any())
+    {
+        <div class="text-center py-5">
+            <p class="text-muted">
+                Giỏ hàng trống.
+                <a asp-area="" asp-controller="Product" asp-action="Category"
+                   class="text-gold">Tiếp tục mua sắm</a>
+            </p>
+        </div>
+        return;
+    }
+
+    <div class="row g-5">
+        <!-- CỘT TRÁI: FORM -->
+        <div class="col-lg-7">
+
+            @if (!User.Identity!.IsAuthenticated)
+            {
+                <div class="d-flex align-items-center gap-3 p-3 mb-4"
+                     style="border:1px solid #e8d9b8; background:#fdf9f0;">
+                    <i class="fa fa-info-circle text-gold"></i>
+                    <span class="small">
+                        Bạn đang mua với tư cách khách vãng lai.
+                        <a href="/Identity/Account/Login"
+                           style="color:var(--gold);">Đăng nhập</a>
+                        để lưu lịch sử đơn hàng.
+                    </span>
+                </div>
+            }
+
+            <form asp-area=""
+                  asp-controller="Cart"
+                  asp-action="PlaceOrder"
+                  method="post"
+                  class="checkout-form">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger small py-2"
+                     style="border-radius:0;"></div>
+
+                <p class="step-header">
+                    <i class="fa fa-user me-2 text-gold"></i>
+                    Thông Tin Giao Hàng
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="FullName" class="form-label">Họ và Tên *</label>
+                        <input asp-for="FullName" class="form-control"
+                               placeholder="Nguyễn Văn A">
+                        <span asp-validation-for="FullName"
+                              class="text-danger" style="font-size:0.75rem;"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label">Email *</label>
+                        <input asp-for="Email" class="form-control"
+                               placeholder="your@email.com">
+                        <span asp-validation-for="Email"
+                              class="text-danger" style="font-size:0.75rem;"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Phone" class="form-label">Số Điện Thoại *</label>
+                        <input asp-for="Phone" class="form-control"
+                               placeholder="0912 345 678">
+                        <span asp-validation-for="Phone"
+                              class="text-danger" style="font-size:0.75rem;"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="ShippingAddress" class="form-label">
+                            Địa Chỉ Giao Hàng *
+                        </label>
+                        <input asp-for="ShippingAddress" class="form-control"
+                               placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành">
+                        <span asp-validation-for="ShippingAddress"
+                              class="text-danger" style="font-size:0.75rem;"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Note" class="form-label">Ghi Chú</label>
+                        <textarea asp-for="Note" class="form-control" rows="2"
+                                  placeholder="Ghi chú cho đơn hàng (không bắt buộc)"></textarea>
+                    </div>
+
+                    <!-- MÃ GIẢM GIÁ -->
+                    <div class="col-12">
+                        <label class="form-label">Mã Giảm Giá</label>
+                        <div class="input-group">
+                            <input asp-for="CouponCode"
+                                   id="couponInput"
+                                   class="form-control"
+                                   placeholder="Nhập mã giảm giá...">
+                            <button type="button"
+                                    onclick="applyCoupon()"
+                                    class="btn btn-outline-gold"
+                                    style="border-radius:0;">
+                                Áp Dụng
+                            </button>
+                        </div>
+                        <div id="couponMsg" class="coupon-result"></div>
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="btn btn-gold w-100 py-3 mt-4"
+                        style="letter-spacing:2px; text-transform:uppercase; font-size:0.85rem;">
+                    <i class="fa fa-check-circle me-2"></i>Đặt Hàng
+                </button>
+
+                <p class="text-center text-muted mt-3 mb-0" style="font-size:0.75rem;">
+                    <i class="fa fa-lock me-1"></i>
+                    Thông tin của bạn được bảo mật tuyệt đối
+                </p>
+            </form>
+        </div>
+
+        <!-- CỘT PHẢI: TÓM TẮT -->
+        <div class="col-lg-5">
+            <div class="order-summary">
+                <p class="step-header">
+                    <i class="fa fa-shopping-bag me-2 text-gold"></i>
+                    Đơn Hàng Của Bạn (@Model.CartItems.Sum(x => x.Quantity) sản phẩm)
+                </p>
+
+                @foreach (var item in Model.CartItems)
+                {
+                    <div class="summary-item">
+                        <div style="flex:1;">
+                            <div class="fw-semibold serif"
+                                 style="font-size:0.88rem;">
+                                @item.ProductName
+                            </div>
+                            @if (!string.IsNullOrEmpty(item.VariantName))
+                            {
+                                <div class="text-muted"
+                                     style="font-size:0.75rem;">
+                                    @item.VariantName
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(item.GiftMessage))
+                            {
+                                <div style="font-size:0.72rem; color:var(--gold); font-style:italic;">
+                                    💌 "@item.GiftMessage"
+                                </div>
+                            }
+                            <div class="text-muted"
+                                 style="font-size:0.75rem;">
+                                @item.UnitPrice.ToString("N0")đ × @item.Quantity
+                            </div>
+                        </div>
+                        <div class="text-gold fw-semibold" style="white-space:nowrap;">
+                            @item.Subtotal.ToString("N0")đ
+                        </div>
+                    </div>
+                }
+
+                <hr style="border-color:#e8d9b8;">
+
+                <div class="summary-item">
+                    <span class="text-muted">Tạm tính:</span>
+                    <span>@Model.TotalAmount.ToString("N0")đ</span>
+                </div>
+                <div class="summary-item">
+                    <span class="text-muted">Phí vận chuyển:</span>
+                    <span class="text-success">Miễn phí</span>
+                </div>
+                <div class="summary-item text-success"
+                     id="discountRow" style="display:none;">
+                    <span>Giảm giá:</span>
+                    <span id="discountDisplay">-0đ</span>
+                </div>
+
+                <hr style="border-color:#e8d9b8;">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="serif fw-semibold" style="font-size:1rem;">Tổng Cộng:</span>
+                    <span class="text-gold serif fw-semibold"
+                          id="finalTotal"
+                          style="font-size:1.3rem;">
+                        @Model.TotalAmount.ToString("N0")đ
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let totalAmount  = @Model.TotalAmount;
+        let discountAmt  = 0;
+
+        function applyCoupon() {
+            const code = document.getElementById('couponInput').value.trim();
+            if (!code) return;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            fetch('/Cart/ApplyCoupon', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `code=${encodeURIComponent(code)}&total=${totalAmount}`
+            })
+            .then(r => r.json())
+            .then(res => {
+                const msgEl = document.getElementById('couponMsg');
+                if (res.success) {
+                    discountAmt = res.discount;
+                    msgEl.innerHTML =
+                        `<span class="text-success"><i class="fa fa-check me-1"></i>${res.message}</span>`;
+
+                    document.getElementById('discountRow').style.display = 'flex';
+                    document.getElementById('discountDisplay').textContent =
+                        '-' + discountAmt.toLocaleString('vi-VN') + 'đ';
+                    document.getElementById('finalTotal').textContent =
+                        (totalAmount - discountAmt).toLocaleString('vi-VN') + 'đ';
+                } else {
+                    msgEl.innerHTML =
+                        `<span class="text-danger"><i class="fa fa-times me-1"></i>${res.message}</span>`;
+                }
+            });
+        }
+    </script>
+}

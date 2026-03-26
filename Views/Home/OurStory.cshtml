@@ -1,0 +1,409 @@
+﻿
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Câu chuyện của chúng tôi - GODIVA</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+
+    <style>
+        /* BẢNG MÀU & FONT CHỮ MỚI */
+        :root {
+            --gd-purple: #5c4f6c;     
+            --gd-dark: #3a2e3f;       
+            --gd-gold: #cba052;       
+            --gd-cream: #fcfaf7;      
+            --gd-text-light: #ffffff;
+            --gd-text-dark: #212121;
+            --gd-text-gray: #4a4a4a;
+            
+            /* SỬ DỤNG FONT MỚI TẠI ĐÂY */
+            --font-heading: 'Playfair Display', serif;
+            --font-body: 'Mulish', sans-serif;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            font-family: var(--font-body);
+            color: var(--gd-text-dark);
+            background-color: var(--gd-dark);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3 {
+            font-family: var(--font-heading);
+            font-weight: 600; /* Tăng độ đậm một chút cho tiêu đề để nhìn sang hơn */
+            margin-top: 0;
+        }
+        
+        /* Chỉnh nhẹ lại nút bấm cho hợp với font mới */
+        .btn-outline {
+            display: inline-block; padding: 12px 30px;
+            border: 1px solid currentColor; color: currentColor;
+            text-decoration: none; text-transform: uppercase;
+            font-size: 0.85rem; letter-spacing: 2px;
+            font-weight: 600;
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .btn-outline:hover { background-color: currentColor; color: white; }
+
+        .reveal-up {
+            opacity: 0; transform: translateY(40px);
+            transition: opacity 1s ease-out, transform 1s ease-out;
+        }
+        .reveal-up.active { opacity: 1; transform: translateY(0); }
+
+        /* =========================================
+           1. HERO SECTION
+           ========================================= */
+        .hero-section {
+            background: linear-gradient(to bottom, rgba(58, 46, 63, 0.9), rgba(58, 46, 63, 0.7)), url('/images/ourstory/1.webp') center/cover;
+            color: var(--gd-text-light);
+            text-align: center;
+            padding: 100px 20px 80px;
+        }
+        .hero-section h4 { font-size: 1rem; letter-spacing: 2px; margin-bottom: 20px; }
+        .hero-section h1 { font-size: 3.5rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; max-width: 900px; margin-inline: auto; line-height: 1.3;}
+        .hero-section p { max-width: 800px; margin: 0 auto; font-size: 1.1rem; line-height: 1.6; }
+
+        /* =========================================
+           2. OBSESSION SLIDER
+           ========================================= */
+        .obsession-section {
+            background-color: var(--gd-purple);
+            color: var(--gd-text-light);
+            padding: 80px 0 60px;
+            position: relative;
+            user-select: none;
+        }
+        
+        .obs-slider-container { display: grid; width: 100%; overflow: hidden; cursor: grab; }
+        .obs-slider-container:active { cursor: grabbing; }
+
+        .obs-slide {
+            grid-area: 1 / 1; 
+            display: flex; align-items: center; max-width: 1200px; margin: 0 auto; gap: 60px; padding: 0 20px; box-sizing: border-box;
+            opacity: 0; visibility: hidden; transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+        }
+
+        .obs-slide.active { opacity: 1; visibility: visible; z-index: 2; }
+
+        .obs-img { flex: 1; pointer-events: none; }
+        .obs-img img { width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        
+        .obs-content { flex: 1; }
+        .obs-content h4 { font-size: 1rem; letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase;}
+        .obs-content h2 { font-size: 3.2rem; text-transform: uppercase; margin-bottom: 20px; line-height: 1.2;}
+        .obs-content p { font-size: 1.1rem; line-height: 1.7; }
+
+        .obs-slide.active .obs-content { animation: textFadeUp 0.8s ease-out forwards; }
+
+        @@keyframes textFadeUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .obs-dots { text-align: center; margin-top: 50px; position: relative; z-index: 10; }
+        .dot {
+            height: 10px; width: 10px; margin: 0 6px;
+            background-color: rgba(255,255,255,0.3);
+            border-radius: 50%; display: inline-block;
+            cursor: pointer; transition: 0.3s;
+        }
+        .dot.active { background-color: white; transform: scale(1.2); }
+
+        /* =========================================
+           CÁC PHẦN CÒN LẠI
+           ========================================= */
+        .icons-section { background-color: var(--gd-cream); padding: 100px 20px; text-align: center; }
+        .icons-title { font-size: 2.5rem; margin-bottom: 50px; text-transform: uppercase; }
+        .icons-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 1200px; margin: 0 auto; }
+        .icon-card { text-align: left; }
+        .icon-card .img-wrapper { overflow: hidden; margin-bottom: 20px; border-radius: 4px;}
+        .icon-card img { width: 100%; height: 350px; object-fit: cover; transition: transform 0.5s ease; }
+        .icon-card:hover img { transform: scale(1.05); }
+        .icon-card h3 { font-size: 1.8rem; margin-bottom: 15px; text-transform: uppercase; }
+        .icon-card p { color: var(--gd-text-gray); line-height: 1.7; }
+
+        .chefs-section { background-color: var(--gd-cream); padding: 80px 20px 100px; }
+        .chefs-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 60px; }
+        .chefs-content { flex: 1; }
+        .chefs-content h2 { font-size: 3rem; margin-bottom: 20px; text-transform: uppercase; }
+        .chefs-content p { color: var(--gd-text-gray); margin-bottom: 30px; font-size: 1.1rem; line-height: 1.7;}
+        .chefs-images { flex: 1; display: flex; gap: 20px; }
+        .chefs-images img { width: 50%; object-fit: cover; height: 500px; border-radius: 4px;}
+
+        .timeline-section {
+            position: relative; background: url('/images/ourstory/6.webp') center/cover no-repeat;
+            padding: 100px 20px; height: 600px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .timeline-overlay { position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); z-index: 1; }
+        .timeline-card {
+            background-color: var(--gd-purple); color: white; padding: 60px 50px; max-width: 650px; text-align: center;
+            position: relative; z-index: 2; border: 1px solid var(--gd-gold); outline: 10px solid var(--gd-purple);
+        }
+        .timeline-card h2 { font-size: 3.5rem; margin-bottom: 20px; color: var(--gd-gold);}
+        .timeline-card p { font-size: 1.1rem; line-height: 1.7;}
+        .timeline-nav { position: absolute; bottom: 0; left: 0; right: 0; background-color: #1a1a1a; display: flex; justify-content: center; gap: 40px; padding: 20px 0; z-index: 2; }
+        .timeline-nav span { color: gray; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 1.1rem;}
+        .timeline-nav span.active, .timeline-nav span:hover { color: var(--gd-gold); border-bottom: 2px solid var(--gd-gold); padding-bottom: 5px; }
+
+        .resp-section { background-color: var(--gd-cream); padding: 100px 20px; }
+        .resp-container { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; gap: 80px; }
+        .resp-content { flex: 1; }
+        .resp-content h2 { font-size: 2.5rem; margin-bottom: 20px; text-transform: uppercase; line-height: 1.3;}
+        .resp-content p { color: var(--gd-text-gray); margin-bottom: 30px; line-height: 1.7; font-size: 1.1rem;}
+        .resp-image { flex: 1; position: relative; }
+        .resp-image::before { content: ''; position: absolute; top: -20px; bottom: -20px; left: 40px; right: -40px; background-color: #3e2723; z-index: 1; border-radius: 4px;}
+        .resp-image img { width: 100%; height: auto; position: relative; z-index: 2; border-radius: 4px;}
+
+        @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* RESPONSIVE */
+        @@media (max-width: 900px) {
+            .obs-slide, .icons-grid, .chefs-container, .resp-container { flex-direction: column; grid-template-columns: 1fr; gap: 40px; }
+            .timeline-nav { gap: 15px; flex-wrap: wrap; }
+            .hero-section h1 { font-size: 2.2rem; }
+            .obs-content h2, .timeline-card h2 { font-size: 2.2rem; text-align: center;}
+            .obs-content h4, .obs-content p { text-align: center; }
+            .chefs-images img { height: 350px; }
+        }
+    </style>
+</head>
+<body>
+
+    <section class="hero-section reveal-up">
+        <h4>CÂU CHUYỆN CỦA CHÚNG TÔI</h4>
+        <h1>Di Sản Bỉ Độc Tôn Từ Năm 1926</h1>
+        <p>Ra đời tại Bỉ vào năm 1926, GODIVA mang trong mình một di sản kiêu hãnh của tính nghệ thuật, sự khéo léo và niềm đam mê bất tận. Lấy cảm hứng từ tinh thần hào hiệp và sự táo bạo của phu nhân Lady Godiva, chúng tôi tạo ra những viên sô-cô-la đánh thức mọi giác quan, biến những khoảnh khắc bình dị trở nên vô cùng phi thường.</p>
+    </section>
+
+    <section class="obsession-section">
+        <div class="obs-slider-container" id="obs-slider-container">
+            <div class="obs-slide active">
+                <div class="obs-img"><img src="~/images/ourstory/1.webp" alt="Nghệ Thuật Giác Quan" draggable="false"></div>
+                <div class="obs-content">
+                    <h4>Đam mê bất tận với</h4>
+                    <h2>Nghệ Thuật Đánh Thức Giác Quan</h2>
+                    <p>Mỗi kiệt tác GODIVA là một bản giao hưởng hoàn hảo của các giác quan — tiếng gãy giòn tan của lớp vỏ sô-cô-la hảo hạng, sự tan chảy mềm mịn của nhân ganache, cùng sự cân bằng tinh tế giữa hương và vị. Được chế tác để đánh thức niềm vui, sô-cô-la của chúng tôi biến hương vị thành những cảm xúc thăng hoa thuần khiết nhất.</p>
+                </div>
+            </div>
+            <div class="obs-slide">
+                <div class="obs-img"><img src="~/images/ourstory/2.webp" alt="Từng Chi Tiết" draggable="false"></div>
+                <div class="obs-content">
+                    <h4>Đam mê bất tận với</h4>
+                    <h2>Từng Chi Tiết Nhỏ Nhất</h2>
+                    <p>Từ độ bóng bẩy không tì vết của lớp vỏ sô-cô-la cho đến sự hòa quyện của các hương vị bên trong, mọi chi tiết đều được hoàn thiện ở mức tối đa. Ngay cả lớp vỏ hộp cũng được thiết kế với sự tận tâm tuyệt đối — như một lời tôn vinh vẻ đẹp và sự thanh lịch — bởi vì sự tận hưởng thực sự đã bắt đầu từ rất lâu trước miếng cắn đầu tiên.</p>
+                </div>
+            </div>
+            <div class="obs-slide">
+                <div class="obs-img"><img src="~/images/ourstory/3.webp" alt="Trải Nghiệm" draggable="false"></div>
+                <div class="obs-content">
+                    <h4>Đam mê bất tận với</h4>
+                    <h2>Những Trải Nghiệm Đỉnh Cao</h2>
+                    <p>Chúng tôi tạo ra những khoảnh khắc làm say đắm mọi giác quan — một bữa tiệc thực sự của thị giác, thính giác, vị giác và xúc giác. Bằng cách biến những điều bình thường thành phi thường, GODIVA đưa mỗi lần thưởng thức sô-cô-la thành một cuộc hành trình đắm chìm trong sự mê hoặc và niềm vui sướng.</p>
+                </div>
+            </div>
+            <div class="obs-slide">
+                <div class="obs-img"><img src="~/images/ourstory/12.webp" alt="Sự Đổi Mới" draggable="false"></div>
+                <div class="obs-content">
+                    <h4>Đam mê bất tận với</h4>
+                    <h2>Sự Đổi Mới Không Ngừng</h2>
+                    <p>Được dẫn dắt bởi trí tưởng tượng phong phú và chuyên môn bậc thầy, các Bếp trưởng của chúng tôi không ngừng vượt qua những giới hạn của nghệ thuật sô-cô-la. Từ những hương vị mới đầy táo bạo cho đến những kết cấu đầy cảm hứng, sự đổi mới tại GODIVA đồng nghĩa với việc tái định nghĩa sự tận hưởng mà vẫn luôn tôn vinh di sản Bỉ.</p>
+                </div>
+            </div>
+            <div class="obs-slide">
+                <div class="obs-img"><img src="~/images/ourstory/4.webp" alt="Nguyên Liệu" draggable="false"></div>
+                <div class="obs-content">
+                    <h4>Đam mê bất tận với</h4>
+                    <h2>Nguyên Liệu Thượng Hạng</h2>
+                    <p>Chúng tôi rong ruổi khắp thế giới để tìm kiếm những hạt cacao, các loại hạt, trái cây và gia vị thượng hạng nhất — mỗi thành phần đều được lựa chọn với sự khắt khe tuyệt đối để đảm bảo mọi kiệt tác GODIVA đều mang lại sự mãn nguyện trọn vẹn ngay từ lần chạm môi đầu tiên.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="obs-dots reveal-up" id="obs-dots">
+            <span class="dot active" onclick="goToSlide(0)"></span>
+            <span class="dot" onclick="goToSlide(1)"></span>
+            <span class="dot" onclick="goToSlide(2)"></span>
+            <span class="dot" onclick="goToSlide(3)"></span>
+            <span class="dot" onclick="goToSlide(4)"></span>
+        </div>
+    </section>
+
+    <section class="icons-section">
+        <h2 class="icons-title reveal-up">Những Biểu Tượng Của Chúng Tôi</h2>
+        <div class="icons-grid">
+            <div class="icon-card reveal-up">
+                <div class="img-wrapper"><img src="~/images/ourstory/5.webp" alt="Lady Godiva"></div>
+                <h3>Lady Godiva</h3>
+                <p>Lấy cảm hứng từ câu chuyện lịch sử vượt thời gian về lòng dũng cảm, sự hào phóng và nét duyên dáng của phu nhân Lady Godiva. Chúng tôi mang theo tinh thần của bà vào mọi tuyệt tác — một di sản của sự táo bạo và vẻ đẹp được dệt nên từ chính trái tim của thương hiệu.</p>
+            </div>
+            <div class="icon-card reveal-up" style="transition-delay: 0.2s;">
+                <div class="img-wrapper"><img src="~/images/ourstory/6.webp" alt="Pierre Draps"></div>
+                <h3>Pierre Draps Sr.</h3>
+                <p>Năm 1926, nghệ nhân sô-cô-la người Bỉ Pierre Draps Sr. bắt đầu chế tác những viên sô-cô-la tuyệt hảo trong xưởng nhỏ tại Brussels. Với tính nghệ thuật và sự cống hiến không ngừng, ông đã đặt nền móng cho một cái tên đồng nghĩa với sự xa xỉ bậc nhất.</p>
+            </div>
+            <div class="icon-card reveal-up" style="transition-delay: 0.4s;">
+                <div class="img-wrapper"><img src="~/images/ourstory/7.webp" alt="Sự Đổi Mới"></div>
+                <h3>Sự Đổi Mới</h3>
+                <p>Sự đổi mới luôn là nhịp đập trung tâm của GODIVA kể từ năm 1926. Được dẫn dắt bởi di sản Bỉ và sức sáng tạo vô hạn của các Bếp trưởng, chúng tôi không ngừng khám phá những hương vị táo bạo, thiết kế nổi bật để tái định nghĩa sự tận hưởng.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="chefs-section reveal-up">
+        <div class="chefs-container">
+            <div class="chefs-content">
+                <h2>Các Bếp Trưởng, Hôm Nay</h2>
+                <p>Tại GODIVA, các Bếp trưởng và Nghệ nhân làm sô-cô-la là những người gìn giữ nghệ thuật sô-cô-la Bỉ, kế thừa một truyền thống vượt thời gian. Lấy cảm hứng từ người sáng lập Pierre Draps — người luôn tin rằng những viên sô-cô-la ngon nhất phải vừa phức tạp tinh tế, lại vừa cân bằng hoàn hảo — họ tiếp tục tạo ra những tuyệt tác làm ngạc nhiên vị giác và thỏa mãn mọi tâm hồn.</p>
+                <a href="#" class="btn-outline">Gặp Gỡ Đội Ngũ</a>
+            </div>
+            <div class="chefs-images">
+                <img src="~/images/ourstory/8.webp" alt="Chef 1">
+                <img src="~/images/ourstory/9.webp" alt="Chef 2">
+            </div>
+        </div>
+    </section>
+
+    <section class="timeline-section reveal-up">
+        <div class="timeline-overlay"></div>
+        <div class="timeline-card" id="timeline-card">
+            <h2 id="tl-year">1926</h2>
+            <p id="tl-text">Trong một xưởng nhỏ ở Brussels, Pierre Draps Sr. tạo ra những viên sô-cô-la tuyệt hảo đầu tiên, đặt nền móng vững chắc cho GODIVA. Được đặt tên theo phu nhân Lady Godiva, thương hiệu chính là hiện thân của sự táo bạo, lòng hào hiệp và sự tận hưởng vượt thời gian.</p>
+        </div>
+        <div class="timeline-nav">
+            <span class="active" onclick="changeTimeline('1926', this)">1926</span>
+            <span onclick="changeTimeline('1946', this)">1946</span>
+            <span onclick="changeTimeline('1958', this)">1958</span>
+            <span onclick="changeTimeline('1968', this)">1968</span>
+            <span onclick="changeTimeline('1972', this)">1972</span>
+            <span onclick="changeTimeline('1993', this)">1993</span>
+            <span onclick="changeTimeline('2006', this)">2006</span>
+            <span onclick="changeTimeline('2025', this)">2025</span>
+        </div>
+    </section>
+
+    <section class="resp-section reveal-up">
+        <div class="resp-container">
+            <div class="resp-content">
+                <h2>Trách Nhiệm Của Chúng Tôi</h2>
+                <p>Lấy cảm hứng từ tinh thần dũng cảm và lòng trắc ẩn của Lady Godiva, chúng tôi cam kết định hình một ngành công nghiệp ca cao bền vững và công bằng. GODIVA khao khát một thế giới nơi người nông dân phát triển thịnh vượng, cộng đồng được trao quyền, quyền con người được bảo vệ và môi trường thiên nhiên được trân trọng cho các thế hệ mai sau.</p>
+                <a href="#" class="btn-outline">Phát Triển Bền Vững</a>
+            </div>
+            <div class="resp-image">
+                <img src="~/images/ourstory/10.webp" alt="Trách Nhiệm">
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // --- 1. SCROLL REVEAL ANIMATION ---
+        document.addEventListener("DOMContentLoaded", function() {
+            const reveals = document.querySelectorAll('.reveal-up');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('active');
+                });
+            }, { threshold: 0.15 });
+            reveals.forEach(el => observer.observe(el));
+        });
+
+        // --- 2. OBSESSION SLIDER (CROSSFADE + DRAG/SWIPE LOGIC) ---
+        const slides = document.querySelectorAll('.obs-slide');
+        const dots = document.querySelectorAll('#obs-dots .dot');
+        const sliderContainer = document.getElementById('obs-slider-container');
+        const totalSlides = slides.length;
+        let currentIndex = 0;
+        let autoPlayTimer;
+
+        function goToSlide(index) {
+            slides.forEach(s => s.classList.remove('active'));
+            dots.forEach(d => d.classList.remove('active'));
+            
+            if (index >= totalSlides) currentIndex = 0;
+            else if (index < 0) currentIndex = totalSlides - 1;
+            else currentIndex = index;
+
+            slides[currentIndex].classList.add('active');
+            dots[currentIndex].classList.add('active');
+            
+            resetTimer();
+        }
+
+        function nextSlide() { goToSlide(currentIndex + 1); }
+        function prevSlide() { goToSlide(currentIndex - 1); }
+
+        function resetTimer() {
+            clearInterval(autoPlayTimer);
+            autoPlayTimer = setInterval(nextSlide, 4500);
+        }
+
+        let startX = 0;
+        let endX = 0;
+        const dragThreshold = 50;
+
+        sliderContainer.addEventListener('touchstart', (e) => {
+            startX = e.changedTouches[0].screenX;
+            clearInterval(autoPlayTimer);
+        }, {passive: true});
+
+        sliderContainer.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        sliderContainer.addEventListener('mousedown', (e) => {
+            startX = e.screenX;
+            clearInterval(autoPlayTimer);
+        });
+
+        sliderContainer.addEventListener('mouseup', (e) => {
+            endX = e.screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (startX - endX > dragThreshold) {
+                nextSlide(); 
+            } else if (endX - startX > dragThreshold) {
+                prevSlide(); 
+            } else {
+                resetTimer(); 
+            }
+        }
+
+        resetTimer();
+
+
+        // --- 3. TIMELINE LOGIC ---
+        const timelineData = {
+            '1926': "Trong một xưởng nhỏ ở Brussels, Pierre Draps Sr. tạo ra những viên sô-cô-la tuyệt hảo đầu tiên, đặt nền móng vững chắc cho GODIVA. Được đặt tên theo phu nhân Lady Godiva, thương hiệu chính là hiện thân của sự táo bạo, lòng hào hiệp và sự tận hưởng vượt thời gian.",
+            '1946': "Pierre Draps Jr. và các anh em tiếp tục tầm nhìn của cha mình, sáng tạo nên những công thức định hình nghệ thuật sô-cô-la Bỉ — bao gồm cả viên praline huyền thoại.",
+            '1958': "GODIVA mở cửa hàng đầu tiên tại quảng trường Grand Place mang tính biểu tượng ở Brussels, khẳng định vị thế là điểm đến của những viên sô-cô-la xa xỉ.",
+            '1968': "GODIVA được vinh danh là nhà cung cấp sô-cô-la chính thức cho Hoàng gia Bỉ. Một niềm vinh dự to lớn và đầy tự hào dành cho chất lượng.",
+            '1972': "GODIVA mở cửa hàng đầu tiên tại khu phố Ginza sầm uất của Tokyo, chính thức chinh phục trái tim những người yêu sô-cô-la tại Nhật Bản và vươn tầm thế giới.",
+            '1993': "GODIVA mở rộng tính nghệ thuật với những sáng tạo đầy mê hoặc như truffles, bánh quy và các bộ sưu tập giới hạn theo mùa.",
+            '2006': "GODIVA tái định nghĩa sự tận hưởng với việc ra mắt các không gian cà phê sô-cô-la đầu tiên, phục vụ đồ uống và các món tráng miệng thượng hạng.",
+            '2025': "Khi GODIVA tiến gần đến kỷ niệm 100 năm thành lập, thương hiệu tự hào nhìn lại một thế kỷ của đam mê, tính nghệ thuật và sự đổi mới không ngừng."
+        };
+
+        function changeTimeline(year, element) {
+            document.getElementById('tl-year').innerText = year;
+            document.getElementById('tl-text').innerText = timelineData[year];
+            
+            document.querySelectorAll('.timeline-nav span').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            const card = document.getElementById('timeline-card');
+            card.style.animation = 'none';
+            card.offsetHeight; 
+            card.style.animation = 'fadeIn 0.5s ease-in-out';
+        }
+    </script>
+</body>
+</html>

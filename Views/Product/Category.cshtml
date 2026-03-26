@@ -31,7 +31,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0 small">
                 <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang Chủ</a></li>
-                <li class="breadcrumb-item active">Sản Phẩm</li>
+                <li class="breadcrumb-item active">@(ViewBag.PageTitle ?? "Sản Phẩm")</li>
             </ol>
         </nav>
     </div>
@@ -44,6 +44,10 @@
         <div class="col-md-2">
             <div class="filter-sidebar">
                 <p class="filter-title">Danh Mục</p>
+                <a asp-controller="Product" asp-action="BestSellers"
+                   class="filter-link" style="color:var(--gold); font-weight:600;">
+                    <i class="fa fa-fire me-2" style="color:var(--gold);"></i>Bán Chạy Nhất
+                </a>
                 <a asp-controller="Product" asp-action="Category"
                    class="filter-link @(ViewBag.CurrentSlug == null ? "active" : "")">Tất Cả</a>
                 @foreach (var cat in (IEnumerable<GodivaShop.Web.Models.Domain.Category>)ViewBag.Categories)

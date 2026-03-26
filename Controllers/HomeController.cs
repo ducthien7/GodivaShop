@@ -32,4 +32,10 @@ public class HomeController : Controller
 
         return View(featured);
     }
+
+    public IActionResult OurStory()
+    {
+        return View();
+    }
 }
+

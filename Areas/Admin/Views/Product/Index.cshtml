@@ -42,14 +42,16 @@
                     <td style="font-size:0.82rem;">@p.Category?.Name</td>
                     <td class="text-gold fw-semibold">@p.BasePrice.ToString("N0")đ</td>
                     <td>
-                        @if (p.IsBestSeller)
-                        {
-                            <i class="fa fa-star text-gold"></i>
-                        }
-                        else
-                        {
-                            <i class="fa fa-star text-muted"></i>
-                        }
+                        <button type="button" 
+                                class="btn btn-sm" 
+                                onclick="toggleBestSeller(@p.Id)"
+                                style="border:1px solid @(p.IsBestSeller ? "var(--gold)" : "#ccc"); 
+                                       color:@(p.IsBestSeller ? "var(--gold)" : "#999");
+                                       background:@(p.IsBestSeller ? "rgba(193,163,94,0.1)" : "#fff");
+                                       border-radius:0; padding:4px 8px;"
+                                title="@(p.IsBestSeller ? "Bỏ Best Seller" : "Đánh dấu Best Seller")">
+                            <i class="fa @(p.IsBestSeller ? "fa-star" : "fa-star-o")"></i>
+                        </button>
                     </td>
                     <td>
                         @if (p.IsActive)
@@ -62,16 +64,41 @@
                         }
                     </td>
                     <td>
-                        <div class="d-flex gap-1">
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Edit" asp-route-id="@p.Id"
-                               class="btn btn-sm btn-admin-outline" title="Sửa">
+                        <div class="d-flex gap-1 flex-wrap">
+                            <!-- Sửa -->
+                            <a asp-area="Admin"
+                               asp-controller="Product"
+                               asp-action="Edit"
+                               asp-route-id="@p.Id"
+                               class="btn btn-sm btn-admin-outline"
+                               title="Chỉnh sửa">
                                 <i class="fa fa-edit"></i>
                             </a>
-                            <form asp-area="Admin" asp-controller="Product" asp-action="Delete" method="post"
-                                  onsubmit="return confirm('Ẩn sản phẩm này?')">
+
+                            <!-- Xem ngoài website -->
+                            <a href="/Product/Detail/@p.Id"
+                               target="_blank"
+                               class="btn btn-sm"
+                               style="border:1px solid #17a2b8; color:#17a2b8;
+                  border-radius:0; padding:4px 8px;"
+                               title="Xem ngoài website">
+                                <i class="fa fa-eye"></i>
+                            </a>
+
+                            <!-- Ẩn/Hiện -->
+                            <form asp-area="Admin"
+                                  asp-controller="Product"
+                                  asp-action="Delete"
+                                  method="post"
+                                  onsubmit="return confirm('@(p.IsActive ? "Ẩn" : "Hiện") sản phẩm này?')">
+                                @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@p.Id">
-                                <button type="submit" class="btn btn-sm" style="border:1px solid #e74c3c; color:#e74c3c; border-radius:0;">
-                                    <i class="fa fa-eye-slash"></i>
+                                <button type="submit"
+                                        class="btn btn-sm"
+                                        style="border:1px solid #e74c3c; color:#e74c3c;
+                           border-radius:0; padding:4px 8px;"
+                                        title="@(p.IsActive ? "Ẩn sản phẩm" : "Hiện sản phẩm")">
+                                    <i class="fa @(p.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
                                 </button>
                             </form>
                         </div>
@@ -87,6 +114,19 @@
         function searchProd() {
             const t = $('#searchProd').val().toLowerCase();
             $('.prod-row').each(function() { $(this).toggle($(this).data('search').includes(t)); });
+        }
+
+        function toggleBestSeller(productId) {
+            $.post('/Admin/Product/ToggleBestSeller', { id: productId }, function(res) {
+                if (res.success) {
+                    // Reload table
+                    location.reload();
+                } else {
+                    alert(res.message || 'Lỗi khi cập nhật');
+                }
+            }).fail(function() {
+                alert('Lỗi kết nối');
+            });
         }
     </script>
 }
