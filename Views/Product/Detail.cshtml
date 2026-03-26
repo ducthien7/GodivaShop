@@ -21,16 +21,19 @@
     <div class="row g-5">
         <!-- CỘT TRÁI: GALLERY -->
         <div class="col-md-6">
+            @{ var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder).ToList(); }
             <img id="mainImage"
-                 src="@Url.Content(Model.Images.FirstOrDefault(i => i.IsMain)?.ImagePath ?? Model.Images.FirstOrDefault()?.ImagePath ?? "~/images/no-image.jpg")"
+                 src="@Url.Content(orderedImages.FirstOrDefault(i => i.IsMain)?.ImagePath ?? orderedImages.FirstOrDefault()?.ImagePath ?? "~/images/no-image.jpg")"
                  class="main-image mb-3"
                  onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=600'">
 
             <div class="thumbnail-strip d-flex gap-2 flex-wrap">
-                @foreach (var img in Model.Images)
+                @for (int i = 0; i < orderedImages.Count; i++)
                 {
+                    var img = orderedImages[i];
+                    var isActive = img.IsMain || (i == 0 && !orderedImages.Any(x => x.IsMain));
                     <img src="@Url.Content(img.ImagePath)"
-                         class="thumbnail @(img.IsMain ? "active" : "")"
+                         class="thumbnail @(isActive ? "active" : "")"
                          onclick="changeMainImage(this, '@Url.Content(img.ImagePath)')"
                          onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=80'">
                 }
@@ -68,6 +71,16 @@
             <div class="mb-4">
                 <label class="small text-uppercase mb-2" style="letter-spacing:1px;">Lời Chúc (Tùy chọn)</label>
                 <textarea id="giftMessage" class="form-control" rows="2" placeholder="Nhập lời chúc của bạn..."></textarea>
+            </div>
+
+            <!-- SỐ LƯỢNG -->
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <label class="small text-uppercase mb-0" style="letter-spacing:1px;">Số lượng</label>
+                <div class="input-group" style="width:140px;">
+                    <button class="btn btn-outline-secondary" type="button" id="qtyMinus">-</button>
+                    <input type="number" id="quantityInput" class="form-control text-center" value="1" min="1" style="padding:0.5rem;">
+                    <button class="btn btn-outline-secondary" type="button" id="qtyPlus">+</button>
+                </div>
             </div>
 
             <!-- NÚT THÊM VÀO GIỎ -->
@@ -134,11 +147,12 @@
 
         // Thêm vào giỏ - AJAX
         function addToCart(productId) {
+            const qty = parseInt($('#quantityInput').val()) || 1;
             const data = {
                 productId: productId,
                 variantId: selectedVariantId,
                 variantName: selectedVariantId ? $('.variant-btn.active').text().trim() : null,
-                quantity: 1,
+                quantity: qty,
                 unitPrice: parseFloat($('#priceDisplay').text().replace(/[^0-9]/g, '')),
                 productName: '@Model.Name',
                 productImage: $('#mainImage').attr('src'),
@@ -158,6 +172,18 @@
                         $('body').append(toast);
                         setTimeout(() => toast.remove(), 2500);
                     }
+
+        // Quantity buttons
+        $(function() {
+            $('#qtyPlus').click(function() {
+                const cur = parseInt($('#quantityInput').val()) || 1;
+                $('#quantityInput').val(cur + 1);
+            });
+            $('#qtyMinus').click(function() {
+                const cur = parseInt($('#quantityInput').val()) || 1;
+                if (cur > 1) $('#quantityInput').val(cur - 1);
+            });
+        });
                 }
             });
         }
