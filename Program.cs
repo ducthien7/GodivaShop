@@ -1,8 +1,12 @@
-﻿using GodivaShop.Web.Data;
+using GodivaShop.Web;
+using GodivaShop.Web.Data;
 using GodivaShop.Web.Hubs;
 using GodivaShop.Web.Models.Domain;
 using GodivaShop.Web.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 
@@ -27,6 +31,7 @@ AppDomain.CurrentDomain.SetData("DataDirectory", dbFolder);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnection")));
 
+
 // === Identity ===
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -37,13 +42,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// === Google OAuth ===
-builder.Services.AddAuthentication()
-    .AddGoogle(options =>
-    {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
-    });
+
 
 // === Session (Giỏ hàng) ===
 builder.Services.AddDistributedMemoryCache();
@@ -66,6 +65,16 @@ builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddRazorPages();
+
+// Thêm dịch vụ Authentication
+builder.Services.AddAuthentication()
+    .AddGoogle(googleOptions =>
+    {
+        // Đọc key từ appsettings.json
+        googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    });
+builder.Services.AddScoped<IEmailSender, DummyEmailSender>();
 
 var app = builder.Build();
 
