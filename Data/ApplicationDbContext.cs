@@ -18,6 +18,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Coupon> Coupons { get; set; }
+    public DbSet<LuckyPrize>LuckyPrizes { get; set; }
+    public DbSet<UserSpinHistory>UserSpinHistories { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

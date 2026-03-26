@@ -1,9 +1,11 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace GodivaShop.Web.Helpers // Bạn nhớ sửa namespace cho đúng với project của mình
+namespace GodivaShop.Web.Helpers
 {
     public class VnPayLibrary
     {
@@ -41,19 +43,16 @@ namespace GodivaShop.Web.Helpers // Bạn nhớ sửa namespace cho đúng với
                     data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
                 }
             }
-            string queryString = data.ToString();
 
-            baseUrl += "?" + queryString;
-            string signData = queryString;
-            if (signData.Length > 0)
+            string queryString = data.ToString();
+            if (queryString.Length > 0 && queryString.EndsWith("&"))
             {
-                signData = signData.Remove(data.Length - 1);
+                // Cắt bỏ dấu & cuối cùng
+                queryString = queryString.Substring(0, queryString.Length - 1);
             }
 
-            string vnp_SecureHash = HmacSHA512(vnp_HashSecret, signData);
-            baseUrl += "vnp_SecureHash=" + vnp_SecureHash;
-
-            return baseUrl;
+            string vnp_SecureHash = HmacSHA512(vnp_HashSecret, queryString);
+            return baseUrl + "?" + queryString + "&vnp_SecureHash=" + vnp_SecureHash;
         }
 
         public bool ValidateSignature(string inputHash, string secretKey)
@@ -66,9 +65,15 @@ namespace GodivaShop.Web.Helpers // Bạn nhớ sửa namespace cho đúng với
                     data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
                 }
             }
-            if (data.Length > 0) data.Remove(data.Length - 1, 1);
 
-            string checkSum = HmacSHA512(secretKey, data.ToString());
+            string checkData = data.ToString();
+            if (checkData.Length > 0 && checkData.EndsWith("&"))
+            {
+                // Cắt bỏ dấu & cuối cùng
+                checkData = checkData.Substring(0, checkData.Length - 1);
+            }
+
+            string checkSum = HmacSHA512(secretKey, checkData);
             return checkSum.Equals(inputHash, StringComparison.InvariantCultureIgnoreCase);
         }
 

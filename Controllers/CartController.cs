@@ -158,6 +158,7 @@ public class CartController : Controller
                 Status = OrderStatus.Pending
             };
 
+            // Tính toán giảm giá
             if (!string.IsNullOrEmpty(vm.CouponCode))
             {
                 var coupon = _db.Coupons.FirstOrDefault(c => c.Code == vm.CouponCode && c.IsActive);
@@ -199,23 +200,26 @@ public class CartController : Controller
                 var vnp_HashSecret = _configuration["VnPay:HashSecret"];
                 var vnp_Url = _configuration["VnPay:BaseUrl"];
 
+                // FIX LỖI vnp_Amount: Nhân 100 và làm tròn về số nguyên long
+                long finalAmount = (long)Math.Round((order.TotalAmount - order.DiscountAmount) * 100);
+
                 vnpay.AddRequestData("vnp_Version", "2.1.0");
                 vnpay.AddRequestData("vnp_Command", "pay");
                 vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
-                vnpay.AddRequestData("vnp_Amount", ((long)((order.TotalAmount - order.DiscountAmount) * 100)).ToString());
-                vnpay.AddRequestData("vnp_CreateDate", order.OrderDate.ToString("yyyyMMddHHmmss"));
+                vnpay.AddRequestData("vnp_Amount", finalAmount.ToString());
+                vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
                 vnpay.AddRequestData("vnp_CurrCode", "VND");
-                vnpay.AddRequestData("vnp_IpAddr", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+                vnpay.AddRequestData("vnp_IpAddr", "127.0.0.1");
                 vnpay.AddRequestData("vnp_Locale", "vn");
-                vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang Godiva #" + order.Id);
+                vnpay.AddRequestData("vnp_OrderInfo", "Thanh-toan-don-hang-" + order.Id);
                 vnpay.AddRequestData("vnp_OrderType", "other");
                 vnpay.AddRequestData("vnp_ReturnUrl", Url.Action("PaymentCallback", "Cart", null, Request.Scheme));
                 vnpay.AddRequestData("vnp_TxnRef", order.Id.ToString());
 
-                return Redirect(vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret));
+                string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
+                return Redirect(paymentUrl);
             }
 
-            // Mặc định là COD
             await CompleteOrderLogic(order);
             return RedirectToAction("PaymentSuccess", new { id = order.Id });
         }
@@ -263,9 +267,22 @@ public class CartController : Controller
         try
         {
             await _emailService.SendOrderConfirmationAsync(order.GuestEmail, order.GuestFullName, order.Id, order.TotalAmount - order.DiscountAmount);
-            await _hubContext.Clients.Group("AdminGroup").SendAsync("NewOrder", new { orderId = order.Id, customerName = order.GuestFullName, amount = order.TotalAmount - order.DiscountAmount });
+
+            // Cập nhật cục dữ liệu gửi lên cái chuông (thêm isGuest)
+            var orderNotification = new
+            {
+                orderId = order.Id,
+                customerName = order.GuestFullName,
+                amount = order.TotalAmount - order.DiscountAmount,
+                isGuest = order.UserId == null // true nếu khách chưa đăng nhập
+            };
+
+            await _hubContext.Clients.Group("AdminGroup").SendAsync("NewOrder", orderNotification);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Lỗi SignalR: " + ex.Message);
+        }
     }
 
     public IActionResult PaymentSuccess(int id)

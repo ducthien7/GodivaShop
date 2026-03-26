@@ -76,7 +76,13 @@ builder.Services.AddAuthentication()
     });
 builder.Services.AddScoped<IEmailSender, DummyEmailSender>();
 
+// 1. Phải nằm TRƯỚC builder.Build()
+builder.Services.AddSession(options => {
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+});
+
 var app = builder.Build();
+
 
 // === Middleware ===
 if (!app.Environment.IsDevelopment())
@@ -88,7 +94,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();           // ← PHẢI trước UseAuthentication
+builder.Services.AddSession(); // Thêm dòng này ở phần Service
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapRazorPages();
@@ -101,7 +108,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapHub<OrderHub>("/orderHub");
+app.MapHub<OrderHub>("/orderHub"); // Cái cũ của bạn
+app.MapHub<ChatHub>("/chatHub");   // Thêm dòng này vào!
 
 // === Seed Data ===
 using (var scope = app.Services.CreateScope())

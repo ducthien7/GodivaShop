@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Vòng Quay May Mắn";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Dùng layout người dùng
+}
+
+@section Styles {
+    <style>
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 50px auto;
+        }
+
+        /* Thẻ Canvas để vẽ vòng quay */
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            transform: rotate(0deg); /* CSS để xoay */
+            transition: transform 5s ease-out; /* Hiệu ứng xoay mượt mà trong 5 giây */
+        }
+
+        /* Mũi tên chỉ giải thưởng */
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 50px;
+            background-color: #e74c3c; /* Màu đỏ */
+            clip-path: polygon(50% 100%, 0 0, 100% 0); /* Vẽ hình tam giác mũi tên */
+            z-index: 10;
+        }
+
+        /* Nút quay ở giữa */
+        #btn-spin {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #fff;
+            color: var(--gold);
+            border: 4px solid var(--gold);
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            z-index: 11;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.2s;
+        }
+
+            #btn-spin:hover {
+                background-color: var(--gold);
+                color: #fff;
+            }
+
+            #btn-spin:disabled {
+                background-color: #ddd;
+                border-color: #aaa;
+                color: #888;
+                cursor: not-allowed;
+            }
+    </style>
+}
+
+<div class="container py-5 text-center">
+    <h1 class="serif text-gold mb-3">Quà Tặng May Mắn</h1>
+    <p class="text-muted mb-5">Thử vận may ngay hôm nay! Mỗi ngày bạn có 1 lượt quay miễn phí để nhận những phần quà hấp dẫn từ Godiva.</p>
+
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <div class="alert alert-warning d-inline-block shadow-sm" style="border-radius: 0;">
+            <i class="fa fa-info-circle me-2"></i>Vui lòng <a href="/Identity/Account/Login?ReturnUrl=/Gift" class="text-gold fw-bold">Đăng nhập</a> để tham gia vòng quay.
+        </div>
+    }
+
+    <div class="wheel-container">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheelCanvas" width="800" height="800"></canvas>
+        <button id="btn-spin" @(User.Identity.IsAuthenticated ? "" : "disabled")>QUAY</button>
+    </div>
+
+    <div id="spin-result" class="mt-4 d-none alert alert-success shadow-sm" style="border-radius: 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+    </div>
+</div>
+
+@Html.AntiForgeryToken() @* Thêm token bảo mật *@
+
+@section Scripts {
+    <script src="~/js/lucky-wheel.js"></script> @* File JS xử lý vòng quay *@
+}

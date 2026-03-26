@@ -67,5 +67,17 @@ public static class DbSeeder
             });
             await context.SaveChangesAsync();
         }
+
+        //lucky spin prize
+        if (!context.LuckyPrizes.Any())
+        {
+            context.LuckyPrizes.AddRange(
+                new LuckyPrize { Name = "Voucher 10%", DiscountValue = 10, WinChance = 20, Quantity = 100, FillColor = "#C1A35E", IsActive = true },
+                new LuckyPrize { Name = "Voucher 20k", DiscountValue = 20000, WinChance = 10, Quantity = 50, FillColor = "#333333", IsActive = true },
+                new LuckyPrize { Name = "Freeship", DiscountValue = 30000, WinChance = 30, Quantity = -1, FillColor = "#C1A35E", IsActive = true },
+                new LuckyPrize { Name = "Chúc may mắn", DiscountValue = null, WinChance = 40, Quantity = -1, FillColor = "#333333", IsActive = true }
+            );
+            await context.SaveChangesAsync();
+        }
     }
 }
