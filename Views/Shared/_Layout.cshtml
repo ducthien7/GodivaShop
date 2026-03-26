@@ -578,5 +578,140 @@
             <i class="fa fa-times"></i>
         </button>
     </div>
+
+    <div id="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <button id="btn-toggle-chat" class="btn btn-primary rounded-circle shadow" style="width: 60px; height: 60px; background-color: var(--gold); border: none;">
+            <i class="fa fa-comments fs-3 text-white"></i>
+        </button>
+    </div>
+
+    <div id="chat-box" class="card shadow d-none" style="position: fixed; bottom: 90px; right: 20px; width: 320px; z-index: 9999; border-radius: 10px; overflow: hidden;">
+        <div class="card-header text-white" style="background-color: var(--gold);">
+            <h6 class="mb-0"><i class="fa fa-headset me-2"></i>Hỗ trợ trực tuyến</h6>
+        </div>
+        <div class="card-body" id="chat-messages" style="height: 300px; overflow-y: auto; background-color: #f9f9f9; font-size: 0.9rem;">
+            <div class="text-muted text-center small mb-2">Bắt đầu trò chuyện với chúng tôi</div>
+        </div>
+        <div class="card-footer bg-white p-2">
+            <div class="input-group">
+                <input type="text" id="chat-input" class="form-control" placeholder="Nhập tin nhắn..." style="border-radius: 20px 0 0 20px; font-size: 0.9rem;">
+                <button id="btn-send-chat" class="btn text-white" style="background-color: var(--gold); border-radius: 0 20px 20px 0;">
+                    <i class="fa fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        const chatConnection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+        let isChatOpen = false;
+        let isFirstOpen = true;
+        let guestName = "Khách_" + Math.floor(Math.random() * 1000);
+
+        // Bật/tắt khung chat
+        document.getElementById("btn-toggle-chat").addEventListener("click", () => {
+        isChatOpen = !isChatOpen;
+        document.getElementById("chat-box").classList.toggle("d-none", !isChatOpen);
+        
+        if(isChatOpen && isFirstOpen) {
+        showWelcomeMessage();
+        isFirstOpen = false;
+        }
+        });
+
+        // 1. Hàm in lời chào ban đầu
+        function showWelcomeMessage() {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "mb-2 text-start";
+        msgDiv.innerHTML = `
+        <span class="badge bg-secondary mb-1">Godiva Bot 🤖</span><br>
+        <span class="p-2 d-inline-block rounded bg-white border shadow-sm" style="max-width: 90%; font-size: 0.85rem;">
+        Chào bạn! Mình có thể giúp gì cho bạn hôm nay?
+        </span>`;
+        document.getElementById("chat-messages").appendChild(msgDiv);
+        
+        // In các nút bấm ra ngay sau lời chào
+        appendQuickReplies();
+        }
+
+        // 2. Hàm TẠO VÀ IN CÁC NÚT BẤM (Dùng chung để gọi lại nhiều lần)
+        function appendQuickReplies() {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "mb-2 text-start quick-replies-container";
+        msgDiv.innerHTML = `
+        <div class="d-inline-block w-100" style="max-width: 90%;">
+        <button class="btn btn-sm btn-outline-secondary mt-1 w-100 text-start quick-reply" data-text="💰 Xem bảng giá">💰 Xem bảng giá</button>
+        <button class="btn btn-sm btn-outline-secondary mt-1 w-100 text-start quick-reply" data-text="🚚 Phí giao hàng">🚚 Phí giao hàng</button>
+        <button class="btn btn-sm btn-outline-danger mt-1 w-100 text-start quick-reply" data-text="👩‍💻 Gặp nhân viên tư vấn">👩‍💻 Gặp nhân viên tư vấn</button>
+        </div>`;
+        document.getElementById("chat-messages").appendChild(msgDiv);
+        scrollToBottom();
+
+        // Gắn sự kiện click cho các nút này
+        const buttons = msgDiv.querySelectorAll('.quick-reply');
+        buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+        const text = this.getAttribute('data-text');
+        sendChatMessage(text);
+                
+        // Ẩn TOÀN BỘ cụm nút này đi sau khi khách đã chọn để khung chat không bị kéo dài
+        msgDiv.style.display = 'none';
+        });
+        });
+        }
+
+        // 3. Hàm gửi tin nhắn đi
+        function sendChatMessage(text) {
+        if (!text) return;
+
+        // Hiện câu hỏi của khách
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "mb-2 text-end";
+        msgDiv.innerHTML = `<span class="p-2 d-inline-block rounded text-white shadow-sm" style="background-color: var(--gold); max-width: 85%; font-size: 0.85rem;">${text}</span>`;
+        document.getElementById("chat-messages").appendChild(msgDiv);
+        
+        // Gửi lên server
+        chatConnection.invoke("SendMessageToAdmin", guestName, text).catch(err => console.error(err));
+        scrollToBottom();
+        }
+
+        // 4. Nhận tin nhắn trả lời từ Server
+        chatConnection.on("ReceiveReply", function (senderName, message) {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "mb-2 text-start";
+        
+        const badgeClass = senderName.includes("Admin") ? "bg-primary" : "bg-secondary";
+        msgDiv.innerHTML = `<span class="badge ${badgeClass} mb-1">${senderName}</span><br>
+        <span class="p-2 d-inline-block rounded bg-white border shadow-sm" style="max-width: 85%; font-size: 0.85rem;">${message}</span>`;
+        document.getElementById("chat-messages").appendChild(msgDiv);
+        scrollToBottom();
+
+        // LOGIC "ĂN TIỀN": NẾU LÀ BOT TRẢ LỜI THÌ HIỆN LẠI MENU NÚT BẤM
+        if (senderName.includes("Bot")) {
+        // Delay nửa giây cho giống con người đang gõ phím
+        setTimeout(appendQuickReplies, 600);
+        }
+        });
+
+        chatConnection.start().catch(err => console.error(err.toString()));
+
+        document.getElementById("btn-send-chat").addEventListener("click", () => {
+        const input = document.getElementById("chat-input");
+        sendChatMessage(input.value.trim());
+        input.value = "";
+        });
+
+        document.getElementById("chat-input").addEventListener("keypress", function (e) {
+        if (e.key === 'Enter') document.getElementById("btn-send-chat").click();
+        });
+
+        function scrollToBottom() {
+        const chatBox = document.getElementById("chat-messages");
+        chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    
+    </script>
+
 </body>
 </html>

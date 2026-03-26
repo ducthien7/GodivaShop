@@ -130,16 +130,20 @@
 
                 <!-- BUTTONS -->
                 <div class="d-grid gap-2 mt-4">
-                    <form method="post" asp-action="ProcessPayment" id="paymentForm">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-confirm w-100" id="submitBtn">
-                            <i class="fa fa-check me-2"></i>Xác Nhận Thanh Toán
-                        </button>
-                    </form>
-                    <a asp-action="Checkout" class="btn btn-back w-100">
-                        <i class="fa fa-arrow-left me-2"></i>Quay Lại Chỉnh Sửa
-                    </a>
-                </div>
+    <form method="post" asp-controller="Cart" asp-action="ProcessPayment" id="paymentForm">
+        @Html.AntiForgeryToken()
+        
+        <input type="hidden" name="PaymentMethod" value="@checkoutInfo.PaymentMethod" />
+        
+        <button type="submit" class="btn btn-confirm w-100" id="submitBtn">
+            <i class="fa fa-check me-2"></i>Xác Nhận Thanh Toán (@checkoutInfo.PaymentMethod)
+        </button>
+    </form>
+    
+    <a asp-action="Checkout" class="btn btn-back w-100">
+        <i class="fa fa-arrow-left me-2"></i>Quay Lại Chỉnh Sửa
+    </a>
+</div>
 
                 <script>
                     document.getElementById('paymentForm').addEventListener('submit', function(e) {

@@ -17,397 +17,107 @@
             --dark: #1a1a1a;
         }
 
-        body {
-            font-family: 'Lato', sans-serif;
-            background: #f4f3f1;
-            margin: 0;
-        }
-
-        .serif {
-            font-family: 'Playfair Display', serif;
-        }
-
-        .text-gold {
-            color: var(--gold) !important;
-        }
+        body { font-family: 'Lato', sans-serif; background: #f4f3f1; margin: 0; }
+        .serif { font-family: 'Playfair Display', serif; }
+        .text-gold { color: var(--gold) !important; }
 
         /* SIDEBAR */
         .sidebar {
-            width: var(--sidebar-w);
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background: var(--dark);
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
+            width: var(--sidebar-w); height: 100vh; position: fixed;
+            top: 0; left: 0; background: var(--dark); display: flex;
+            flex-direction: column; z-index: 1000;
         }
-
         .sidebar-brand {
-            padding: 1.5rem;
-            text-align: center;
-            border-bottom: 1px solid #333;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.4rem;
-            color: var(--gold);
-            letter-spacing: 3px;
+            padding: 1.5rem; text-align: center; border-bottom: 1px solid #333;
+            font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); letter-spacing: 3px;
         }
-
-            .sidebar-brand small {
-                display: block;
-                font-size: 0.55rem;
-                color: #888;
-                letter-spacing: 2px;
-                text-transform: uppercase;
-                margin-top: 4px;
-            }
-
-        .sidebar-nav {
-            padding: 1rem 0;
-            flex: 1;
-            overflow-y: auto;
+        .sidebar-brand small {
+            display: block; font-size: 0.55rem; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px;
         }
-
-        .nav-section {
-            padding: 1rem 1.2rem 0.3rem;
-            font-size: 0.6rem;
-            color: #666;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
+        .sidebar-nav { padding: 1rem 0; flex: 1; overflow-y: auto; }
+        .nav-section { padding: 1rem 1.2rem 0.3rem; font-size: 0.6rem; color: #666; letter-spacing: 2px; text-transform: uppercase; }
         .sidebar-nav .nav-link {
-            padding: 10px 1.5rem;
-            font-size: 0.8rem;
-            color: #bbb;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-            letter-spacing: 0.5px;
-            text-decoration: none;
+            padding: 10px 1.5rem; font-size: 0.8rem; color: #bbb; display: flex;
+            align-items: center; gap: 10px; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none;
         }
-
-            .sidebar-nav .nav-link:hover,
-            .sidebar-nav .nav-link.active {
-                color: #fff;
-                border-left-color: var(--gold);
-                background: rgba(193,163,94,0.08);
-            }
-
-            .sidebar-nav .nav-link i {
-                width: 16px;
-                text-align: center;
-            }
-
-        .sidebar-footer {
-            padding: 1rem 1.5rem;
-            border-top: 1px solid #333;
+        .sidebar-nav .nav-link:hover, .sidebar-nav .nav-link.active {
+            color: #fff; border-left-color: var(--gold); background: rgba(193,163,94,0.08);
         }
-
-            .sidebar-footer a {
-                font-size: 0.75rem;
-                color: #888;
-                text-decoration: none;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-                .sidebar-footer a:hover {
-                    color: var(--gold);
-                }
+        .sidebar-nav .nav-link i { width: 16px; text-align: center; }
+        .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid #333; }
+        .sidebar-footer a { font-size: 0.75rem; color: #888; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .sidebar-footer a:hover { color: var(--gold); }
 
         /* MAIN */
-        .admin-main {
-            margin-left: var(--sidebar-w);
-            min-height: 100vh;
-        }
-
+        .admin-main { margin-left: var(--sidebar-w); min-height: 100vh; }
         .admin-topbar {
-            background: #fff;
-            border-bottom: 1px solid #eee;
-            padding: 0 2rem;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 999;
+            background: #fff; border-bottom: 1px solid #eee; padding: 0 2rem;
+            height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999;
         }
-
-            .admin-topbar .page-title {
-                font-size: 0.85rem;
-                font-weight: 700;
-                letter-spacing: 2px;
-                text-transform: uppercase;
-                color: #333;
-            }
-
-        .admin-content {
-            padding: 2rem;
-        }
-
-        /* CARDS */
-        .stat-card {
-            background: #fff;
-            border: none;
-            border-radius: 0;
-            padding: 1.5rem;
-            border-left: 3px solid var(--gold);
-        }
-
-            .stat-card .stat-num {
-                font-family: 'Playfair Display', serif;
-                font-size: 2rem;
-                color: var(--gold);
-                line-height: 1;
-            }
-
-            .stat-card .stat-label {
-                font-size: 0.7rem;
-                letter-spacing: 1.5px;
-                text-transform: uppercase;
-                color: #999;
-                margin-top: 4px;
-            }
-
-        /* TABLE */
-        .admin-table {
-            background: #fff;
-        }
-
-            .admin-table thead th {
-                background: var(--dark);
-                color: #fff;
-                font-size: 0.7rem;
-                letter-spacing: 1.5px;
-                text-transform: uppercase;
-                font-weight: 400;
-                padding: 1rem;
-                border: none;
-            }
-
-            .admin-table tbody td {
-                font-size: 0.85rem;
-                padding: 0.85rem 1rem;
-                border-color: #f0ede8;
-                vertical-align: middle;
-            }
-
-            .admin-table tbody tr:hover td {
-                background: #faf8f5;
-            }
-
-        /* BADGE STATUS */
-        .badge-status {
-            font-size: 0.65rem;
-            letter-spacing: 1px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            font-weight: 400;
-        }
-
-        .badge-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .badge-confirmed {
-            background: #cce5ff;
-            color: #004085;
-        }
-
-        .badge-shipped {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .badge-cancelled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .badge-delivered {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .badge-processing {
-            background: #e2d9f3;
-            color: #432874;
-        }
-
-        /* FORM */
-        .admin-form-control {
-            border-radius: 0;
-            border: 1px solid #ddd;
-            font-size: 0.875rem;
-        }
-
-            .admin-form-control:focus {
-                border-color: var(--gold);
-                box-shadow: 0 0 0 2px rgba(193,163,94,0.15);
-            }
-
-        .btn-admin-gold {
-            background: var(--gold);
-            color: #fff;
-            border: none;
-            border-radius: 0;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 8px 20px;
-        }
-
-            .btn-admin-gold:hover {
-                background: #d4b97a;
-                color: #fff;
-            }
-
-        .btn-admin-outline {
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            background: transparent;
-            border-radius: 0;
-            font-size: 0.8rem;
-            padding: 6px 16px;
-        }
-
-            .btn-admin-outline:hover {
-                background: var(--gold);
-                color: #fff;
-            }
+        .admin-topbar .page-title { font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #333; }
+        .admin-content { padding: 2rem; }
 
         /* NOTIFICATION */
         #notifDropdown {
-            position: absolute;
-            right: 0;
-            top: 130%;
-            width: 320px;
-            background: #fff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-            z-index: 9999;
-            max-height: 400px;
-            overflow-y: auto;
+            position: absolute; right: 0; top: 130%; width: 320px;
+            background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.12); z-index: 9999;
+            max-height: 400px; overflow-y: auto;
         }
-
-            #notifDropdown .notif-item {
-                padding: 12px 16px;
-                border-bottom: 1px solid #f5f5f5;
-                font-size: 0.8rem;
-            }
-
-                #notifDropdown .notif-item:hover {
-                    background: #faf8f5;
-                }
+        #notifDropdown .notif-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; font-size: 0.8rem; }
+        #notifDropdown .notif-item:hover { background: #faf8f5; }
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="sidebar-brand">
-            GODIVA
-            <small>Admin Panel</small>
+            GODIVA<small>Admin Panel</small>
         </div>
         <nav class="sidebar-nav">
             <p class="nav-section">Tổng Quan</p>
-            <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
-               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
-                <i class="fa fa-chart-bar"></i> Dashboard
-            </a>
+            <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fa fa-chart-bar"></i> Dashboard</a>
 
             <p class="nav-section">Quản Lý</p>
-            <a asp-area="Admin" asp-controller="Order" asp-action="Index"
-               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active" : "")">
-                <i class="fa fa-shopping-bag"></i> Đơn Hàng
-            </a>
-            <a asp-area="Admin" asp-controller="Product" asp-action="Index"
-               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">
-                <i class="fa fa-box"></i> Sản Phẩm
-            </a>
-            <a asp-area="Admin" asp-controller="Category" asp-action="Index"
-               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")">
-                <i class="fa fa-tags"></i> Danh Mục
-            </a>
-            <a asp-area="Admin" asp-controller="Coupon" asp-action="Index"
-               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Coupon" ? "active" : "")">
-                <i class="fa fa-ticket-alt"></i> Mã Giảm Giá
-            </a>
+            <a asp-area="Admin" asp-controller="Order" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active" : "")"><i class="fa fa-shopping-bag"></i> Đơn Hàng</a>
+            <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")"><i class="fa fa-box"></i> Sản Phẩm</a>
+            <a asp-area="Admin" asp-controller="Category" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")"><i class="fa fa-tags"></i> Danh Mục</a>
+            <a asp-area="Admin" asp-controller="Coupon" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Coupon" ? "active" : "")"><i class="fa fa-ticket-alt"></i> Mã Giảm Giá</a>
 
             <p class="nav-section">Người Dùng</p>
-            <a asp-area="Admin" asp-controller="User" asp-action="Index"
-               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")">
-                <i class="fa fa-users"></i> Tài Khoản
-            </a>
+            <a asp-area="Admin" asp-controller="User" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")"><i class="fa fa-users"></i> Tài Khoản</a>
         </nav>
         <div class="sidebar-footer">
-            <!-- Mở tab mới → không mất session admin -->
-            <a href="/" target="_blank"
-               style="font-size:0.75rem; color:#888; text-decoration:none;
-              display:flex; align-items:center; gap:8px; padding:4px 0;
-              transition:color 0.2s;">
-                <i class="fa fa-external-link-alt"></i>
-                Xem Website
-            </a>
+            <a href="/" target="_blank"><i class="fa fa-external-link-alt"></i> Xem Website</a>
         </div>
     </aside>
 
-    <!-- MAIN -->
     <div class="admin-main">
         <div class="admin-topbar">
             <span class="page-title">@ViewData["Title"]</span>
             <div class="d-flex align-items-center gap-3">
-                <a href="/" target="_blank"
-                   class="btn btn-sm"
-                   style="border:1px solid #ddd; border-radius:0; font-size:0.72rem;
-              color:#666; padding:4px 12px; text-decoration:none;">
+                <a href="/" target="_blank" class="btn btn-sm" style="border:1px solid #ddd; border-radius:0; font-size:0.72rem; color:#666; padding:4px 12px; text-decoration:none;">
                     <i class="fa fa-globe me-1"></i> Website
                 </a>
-                <!-- NOTIFICATION BELL -->
+                
                 <div class="position-relative" id="notifBell" onclick="toggleNotif()">
                     <i class="fa fa-bell" style="font-size:1rem; color:#555; cursor:pointer;"></i>
-                    <span id="notifCount"
-                          style="display:none; position:absolute; top:-6px; right:-8px;
-                             background:#e74c3c; color:#fff; font-size:0.6rem;
-                             width:16px; height:16px; border-radius:50%;
-                             display:none; align-items:center; justify-content:center;">
-                        0
-                    </span>
+                    <span id="notifCount" style="display:none; position:absolute; top:-6px; right:-8px; background:#e74c3c; color:#fff; font-size:0.6rem; width:16px; height:16px; border-radius:50%; align-items:center; justify-content:center;">0</span>
                 </div>
                 <div id="notifDropdown" style="display:none;" class="position-absolute">
-                    <div style="padding:10px 16px; border-bottom:1px solid #eee;
-                            font-size:0.7rem; letter-spacing:1px;
-                            text-transform:uppercase; color:#999;">
-                        Đơn Hàng Mới
-                    </div>
-                    <div id="notifList">
-                        <p class="text-muted small text-center p-3 mb-0">Chưa có thông báo</p>
-                    </div>
+                    <div style="padding:10px 16px; border-bottom:1px solid #eee; font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:#999;">Đơn Hàng Mới</div>
+                    <div id="notifList"><p class="text-muted small text-center p-3 mb-0">Chưa có thông báo</p></div>
                 </div>
 
-                <!-- USER -->
                 <div class="dropdown">
-                    <span class="small text-muted"
-                          style="cursor:pointer;" data-bs-toggle="dropdown">
-                        <i class="fa fa-user-circle me-1"></i>
-                        @User.Identity?.Name
+                    <span class="small text-muted" style="cursor:pointer;" data-bs-toggle="dropdown">
+                        <i class="fa fa-user-circle me-1"></i> @User.Identity?.Name
                     </span>
-                    <ul class="dropdown-menu dropdown-menu-end"
-                        style="border-radius:0; font-size:0.8rem;">
+                    <ul class="dropdown-menu dropdown-menu-end" style="border-radius:0; font-size:0.8rem;">
                         <li>
                             <form action="/Identity/Account/Logout" method="post">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="dropdown-item text-danger">
-                                    <i class="fa fa-sign-out-alt me-2"></i>Đăng Xuất
-                                </button>
+                                <button type="submit" class="dropdown-item text-danger"><i class="fa fa-sign-out-alt me-2"></i>Đăng Xuất</button>
                             </form>
                         </li>
                     </ul>
@@ -420,50 +130,162 @@
         </div>
     </div>
 
+    <div id="admin-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <button id="btn-toggle-admin-chat" class="btn btn-primary rounded-circle shadow position-relative" style="width: 60px; height: 60px; background-color: #005aab; border: none;">
+            <i class="fa fa-comments fs-3 text-white"></i>
+            <span id="admin-chat-badge" class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle d-none"></span>
+        </button>
+    </div>
+
+    <div id="admin-chat-box" class="card shadow d-none" style="position: fixed; bottom: 90px; right: 20px; width: 450px; z-index: 9999; border-radius: 10px; overflow: hidden; border: 1px solid #ddd;">
+        <div class="card-header text-white" style="background-color: #005aab; display: flex; justify-content: space-between; align-items: center;">
+            <h6 class="mb-0" style="font-size: 0.9rem;"><i class="fa fa-headset me-2"></i>Hỗ trợ Khách hàng (Admin)</h6>
+            <button id="btn-close-admin-chat" class="btn btn-sm btn-light p-0" style="width: 24px; height: 24px;">&times;</button>
+        </div>
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <div class="col-4 border-end" id="admin-chat-users" style="height: 350px; overflow-y: auto; background: #fff;">
+                    <div class="p-2 text-muted small text-center mt-3">Chưa có KH</div>
+                </div>
+                <div class="col-8 d-flex flex-column" style="height: 350px; background: #f8f9fa;">
+                    <div id="admin-chat-messages" class="p-2 flex-grow-1" style="overflow-y: auto;">
+                        <div class="text-center text-muted mt-5 small">Chọn KH để trò chuyện</div>
+                    </div>
+                    <div class="p-2 bg-white border-top">
+                        <div class="input-group input-group-sm">
+                            <input type="hidden" id="current-customer-id">
+                            <input type="text" id="admin-chat-input" class="form-control" placeholder="Gõ tin nhắn..." disabled>
+                            <button id="btn-admin-send" class="btn text-white" style="background-color: #005aab; border: none;" disabled><i class="fa fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.microsoft.com/ajax/signalr/latest/dist/browser/signalr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    
     <script>
-        // SignalR
+        // =======================
+        // 1. SIGNALR: ORDER HUB (Cũ)
+        // =======================
         let notifCount = 0;
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/orderHub").build();
+        const orderConnection = new signalR.HubConnectionBuilder().withUrl("/orderHub").build();
 
-        connection.on("NewOrder", function (order) {
+        orderConnection.on("NewOrder", function (order) {
             notifCount++;
-            const badge = order.isGuest
-                ? '<span class="badge bg-secondary" style="font-size:0.6rem;">Guest</span>'
-                : '<span class="badge bg-success" style="font-size:0.6rem;">Member</span>';
+            const badge = order.isGuest ? '<span class="badge bg-secondary" style="font-size:0.6rem;">Guest</span>' : '<span class="badge bg-success" style="font-size:0.6rem;">Member</span>';
             const item = `
                     <div class="notif-item">
                         <strong>#${order.orderId}</strong> — ${order.customerName} ${badge}
-                        <br><span style="color:var(--gold);">
-                            ${order.amount.toLocaleString('vi-VN')}đ
-                        </span>
-                        <small class="text-muted float-end">
-                            ${new Date().toLocaleTimeString('vi-VN')}
-                        </small>
+                        <br><span style="color:var(--gold);">${order.amount.toLocaleString('vi-VN')}đ</span>
+                        <small class="text-muted float-end">${new Date().toLocaleTimeString('vi-VN')}</small>
                     </div>`;
             if ($('#notifList p').length) $('#notifList').empty();
             $('#notifList').prepend(item);
             $('#notifCount').text(notifCount).css('display', 'flex');
         });
 
-        connection.start()
-            .then(() => connection.invoke("JoinAdminGroup"))
-            .catch(err => console.error('SignalR:', err));
+        orderConnection.start()
+            .then(() => orderConnection.invoke("JoinAdminGroup"))
+            .catch(err => console.error('Order SignalR:', err));
 
         function toggleNotif() {
-            const d = $('#notifDropdown');
-            d.toggle();
-            if (d.is(':visible')) {
-                notifCount = 0;
-                $('#notifCount').hide();
+            $('#notifDropdown').toggle();
+            if ($('#notifDropdown').is(':visible')) {
+                notifCount = 0; $('#notifCount').hide();
             }
         }
         $(document).click(function (e) {
-            if (!$(e.target).closest('#notifBell, #notifDropdown').length)
-                $('#notifDropdown').hide();
+            if (!$(e.target).closest('#notifBell, #notifDropdown').length) $('#notifDropdown').hide();
+        });
+
+        // =======================
+        // 2. SIGNALR: CHAT HUB (Mới)
+        // =======================
+        const chatConnection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+        let isAdminChatOpen = false;
+
+        // Bật tắt khung chat
+        $('#btn-toggle-admin-chat, #btn-close-admin-chat').click(function() {
+            isAdminChatOpen = !isAdminChatOpen;
+            $('#admin-chat-box').toggleClass('d-none', !isAdminChatOpen);
+            if(isAdminChatOpen) $('#admin-chat-badge').addClass('d-none'); // Tắt chấm đỏ
+        });
+
+        // Nhận tin nhắn từ Bot chuyển sang
+        chatConnection.on("ReceiveMessage", function (connectionId, customerName, message) {
+            // Hiện chấm đỏ báo hiệu có người gọi nếu khung chat đang đóng
+            if(!isAdminChatOpen) $('#admin-chat-badge').removeClass('d-none');
+
+            // 1. Cập nhật danh sách khách hàng bên trái
+            if ($('#user-' + connectionId).length === 0) {
+                if ($('#admin-chat-users .text-center').length) $('#admin-chat-users').empty();
+                
+                const userBtn = $(`
+                    <button class="btn btn-light w-100 text-start border-0 border-bottom rounded-0 p-2" id="user-${connectionId}" style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <i class="fa fa-user text-muted me-1"></i> <strong>${customerName}</strong>
+                        <span class="badge bg-danger ms-1 float-end new-msg">Mới</span>
+                    </button>
+                `);
+                
+                // Khi admin click vào tên 1 khách hàng
+                userBtn.click(function() {
+                    $('#admin-chat-users button').removeClass('bg-secondary text-white');
+                    $(this).addClass('bg-secondary text-white');
+                    $(this).find('.new-msg').addClass('d-none');
+                    
+                    $('#current-customer-id').val(connectionId);
+                    $('#admin-chat-input, #btn-admin-send').prop('disabled', false);
+                    $('#admin-chat-messages').empty(); // (Tạm thời clear tin nhắn khi đổi người)
+                    $('#admin-chat-input').focus();
+                });
+                $('#admin-chat-users').append(userBtn);
+            } else {
+                // Nếu khách cũ nhắn tiếp, hiện chữ "Mới" lên
+                if ($('#current-customer-id').val() !== connectionId) {
+                    $('#user-' + connectionId).find('.new-msg').removeClass('d-none');
+                }
+            }
+
+            // 2. Hiện tin nhắn lên khung nếu đang chat đúng với khách đó
+            if ($('#current-customer-id').val() === connectionId) {
+                const msgHtml = `<div class="mb-2 text-start"><span class="p-2 rounded bg-white border d-inline-block shadow-sm" style="font-size: 0.8rem; max-width: 90%;">${message}</span></div>`;
+                $('#admin-chat-messages').append(msgHtml);
+                const chatBox = document.getElementById("admin-chat-messages");
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        });
+
+        chatConnection.start()
+            .then(() => chatConnection.invoke("JoinAdminGroup"))
+            .catch(err => console.error('Chat SignalR:', err));
+
+        // Nút gửi tin nhắn
+        $('#btn-admin-send').click(function() {
+            const input = $('#admin-chat-input');
+            const connectionId = $('#current-customer-id').val();
+            const msg = input.val().trim();
+            
+            if (msg && connectionId) {
+                // In lên màn hình Admin
+                const msgHtml = `<div class="mb-2 text-end"><span class="p-2 rounded text-white d-inline-block shadow-sm" style="background-color: #005aab; font-size: 0.8rem; max-width: 90%;">${msg}</span></div>`;
+                $('#admin-chat-messages').append(msgHtml);
+                
+                // Gửi tới Khách
+                chatConnection.invoke("ReplyToCustomer", connectionId, msg);
+                input.val("");
+                
+                const chatBox = document.getElementById("admin-chat-messages");
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        });
+
+        // Bấm Enter để gửi
+        $('#admin-chat-input').keypress(function (e) {
+            if (e.key === 'Enter') $('#btn-admin-send').click();
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)

@@ -11,7 +11,6 @@
     </style>
 }
 
-<!-- FILTER TABS -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="filter-tabs btn-group" role="group">
         <button type="button" class="btn btn-outline-secondary active" onclick="filterOrders('all', this)">Tất Cả</button>
@@ -35,7 +34,7 @@
                 <th>Địa Chỉ</th>
                 <th>Loại KH</th>
                 <th>Tổng Tiền</th>
-                <th>Trạng Thái</th>
+                <th>Trạng Thái & Thanh Toán</th>
                 <th>Ngày Đặt</th>
                 <th>Thao Tác</th>
             </tr>
@@ -47,15 +46,20 @@
                     data-type="@(order.UserId == null ? "guest" : "member")"
                     data-status="@order.Status.ToString().ToLower()"
                     data-search="@($"{order.Id} {order.GuestFullName} {order.GuestEmail} {order.GuestPhone}".ToLower())">
+                    
                     <td class="text-gold fw-semibold">#@order.Id</td>
+                    
                     <td>
                         <div class="fw-semibold" style="font-size:0.85rem;">@order.GuestFullName</div>
                         <div class="text-muted" style="font-size:0.75rem;">@order.GuestEmail</div>
                     </td>
+                    
                     <td style="font-size:0.8rem;">@order.GuestPhone</td>
+                    
                     <td style="font-size:0.8rem; max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                         @order.ShippingAddress
                     </td>
+                    
                     <td>
                         @if (order.UserId == null)
                         {
@@ -66,21 +70,49 @@
                             <span class="badge" style="background:#e8f0e8; color:#2d6a2d; font-size:0.65rem; font-weight:400;">Thành Viên</span>
                         }
                     </td>
-                    <td class="text-gold fw-semibold">@(order.TotalAmount - order.DiscountAmount).ToString("N0")đ</td>
-                    <td>
-                        <span class="badge-status badge-@order.Status.ToString().ToLower()">
-                            @order.Status switch {
-                            OrderStatus.Pending => "Chờ xử lý",
-                            OrderStatus.Confirmed => "Đã xác nhận",
-                            OrderStatus.Processing => "Đang xử lý",
-                            OrderStatus.Shipped => "Đang giao",
-                            OrderStatus.Delivered => "Đã giao",
-                            OrderStatus.Cancelled => "Đã hủy",
-                            _ => order.Status.ToString()
-                            }
-                        </span>
+                    
+                    <td class="text-gold fw-bold">
+                        @((order.TotalAmount - order.DiscountAmount).ToString("N0"))đ
                     </td>
+                    
+                    <td>
+                        @{
+                            var statusHtml = order.Status switch {
+                                OrderStatus.Pending => "<span class='badge bg-warning text-dark'>Chờ xử lý</span>",
+                                OrderStatus.Confirmed => "<span class='badge bg-info text-dark'>Đã xác nhận</span>",
+                                OrderStatus.Processing => "<span class='badge bg-primary'>Đang xử lý</span>",
+                                OrderStatus.Shipped => "<span class='badge bg-secondary'>Đang giao</span>",
+                                OrderStatus.Delivered => "<span class='badge bg-success'>Đã giao</span>",
+                                OrderStatus.Cancelled => "<span class='badge bg-danger'>Đã hủy</span>",
+                                _ => $"<span class='badge bg-dark'>{order.Status}</span>"
+                            };
+                        }
+                        @Html.Raw(statusHtml)
+                        
+                        <div class="mt-1"></div>
+                        
+                        @if (order.PaymentMethod == "VNPAY" && order.IsPaid)
+                        {
+                            <span class="badge" style="background-color: #005aab; font-size: 0.7rem;">
+                                <i class="fa fa-credit-card me-1"></i> VNPay (Đã TT)
+                            </span>
+                        }
+                        else if (order.PaymentMethod == "VNPAY" && !order.IsPaid)
+                        {
+                            <span class="badge bg-danger" style="font-size: 0.7rem;">
+                                <i class="fa fa-times-circle me-1"></i> VNPay (Lỗi)
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary" style="font-size: 0.7rem;">
+                                <i class="fa fa-money-bill-wave me-1"></i> COD
+                            </span>
+                        }
+                    </td>
+                    
                     <td class="text-muted" style="font-size:0.8rem;">@order.OrderDate.ToString("dd/MM/yy HH:mm")</td>
+                    
                     <td>
                         <div class="d-flex gap-1">
                             <a asp-area="Admin" asp-controller="Order" asp-action="Detail" asp-route-id="@order.Id"
@@ -99,15 +131,18 @@
                                                 <input type="hidden" name="id" value="@order.Id">
                                                 <input type="hidden" name="status" value="@status">
                                                 <button type="submit" class="dropdown-item @(order.Status == status ? "active" : "")">
-                                                    @status switch {
-                                                    OrderStatus.Pending => "⏳ Chờ xử lý",
-                                                    OrderStatus.Confirmed => "✅ Xác nhận",
-                                                    OrderStatus.Processing => "⚙️ Đang xử lý",
-                                                    OrderStatus.Shipped => "🚚 Đang giao",
-                                                    OrderStatus.Delivered => "✔️ Đã giao",
-                                                    OrderStatus.Cancelled => "❌ Hủy đơn",
-                                                    _ => status.ToString()
+                                                    @{
+                                                        var statusText = status switch {
+                                                            OrderStatus.Pending => "⏳ Chờ xử lý",
+                                                            OrderStatus.Confirmed => "✅ Xác nhận",
+                                                            OrderStatus.Processing => "⚙️ Đang xử lý",
+                                                            OrderStatus.Shipped => "🚚 Đang giao",
+                                                            OrderStatus.Delivered => "✔️ Đã giao",
+                                                            OrderStatus.Cancelled => "❌ Hủy đơn",
+                                                            _ => status.ToString()
+                                                        };
                                                     }
+                                                    @statusText
                                                 </button>
                                             </form>
                                         </li>
