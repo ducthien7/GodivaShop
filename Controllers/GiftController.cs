@@ -88,19 +88,24 @@ namespace GodivaShop.Web.Controllers
             string generatedCode = null;
 
             // Nếu trúng Voucher (DiscountValue có giá trị)
+            // Nếu trúng Voucher (DiscountValue có giá trị)
             if (selectedPrize.DiscountValue.HasValue)
             {
                 generatedCode = "LUCKY-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+
+                // KIỂM TRA TỰ ĐỘNG: Nếu giá trị <= 100 thì là %, lớn hơn thì là tiền mặt (VND)
+                var currentDiscountType = selectedPrize.DiscountValue.Value <= 100
+                    ? DiscountType.Percentage
+                    : DiscountType.FixedAmount;
 
                 // Tạo một Coupon mới vào bảng Coupons của bạn
                 var coupon = new Coupon
                 {
                     Code = generatedCode,
-                    DiscountType = DiscountType.Percentage, // Giả sử mặc định là %, bạn có thể sửa lại logic này
+                    DiscountType = currentDiscountType, // <--- Đã sửa thành biến tự động
                     DiscountValue = selectedPrize.DiscountValue.Value,
                     IsActive = true,
-                    ExpiryDate = DateTime.Now.AddDays(7), // Hạn dùng 7 ngày
-                    
+                    ExpiryDate = DateTime.Now.AddDays(7) // Hạn dùng 7 ngày
                 };
                 _db.Coupons.Add(coupon);
             }
