@@ -57,6 +57,9 @@
         .admin-topbar .page-title { font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #333; }
         .admin-content { padding: 2rem; }
 
+        .admin-topbar .page-title { font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #333; }
+        .admin-content { padding: 2rem; }
+
         /* NOTIFICATION */
         #notifDropdown {
             position: absolute; right: 0; top: 130%; width: 320px;
@@ -83,9 +86,48 @@
             <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")"><i class="fa fa-box"></i> Sản Phẩm</a>
             <a asp-area="Admin" asp-controller="Category" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")"><i class="fa fa-tags"></i> Danh Mục</a>
             <a asp-area="Admin" asp-controller="Coupon" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Coupon" ? "active" : "")"><i class="fa fa-ticket-alt"></i> Mã Giảm Giá</a>
+            <a asp-area="Admin" asp-controller="Order" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active" : "")">
+                <i class="fa fa-shopping-bag"></i> Đơn Hàng
+            </a>
+            <a asp-area="Admin" asp-controller="Product" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">
+                <i class="fa fa-box"></i> Sản Phẩm
+            </a>
+
+            <!-- ===== CHỈ ADMIN MỚI THẤY 3 MỤC NÀY ===== -->
+            @if (User.IsInRole("Admin"))
+            {
+                /*
+                <a asp-area="Admin" asp-controller="Category" asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")">
+                    <i class="fa fa-tags"></i> Danh Mục
+                </a>
+                */
+                <a asp-area="Admin" asp-controller="Coupon" asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Coupon" ? "active" : "")">
+                    <i class="fa fa-ticket-alt"></i> Mã Giảm Giá
+                </a>
 
             <p class="nav-section">Người Dùng</p>
             <a asp-area="Admin" asp-controller="User" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")"><i class="fa fa-users"></i> Tài Khoản</a>
+                <p class="nav-section">Người Dùng</p>
+                <a asp-area="Admin" asp-controller="User" asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")">
+                    <i class="fa fa-users"></i> Tài Khoản
+                </a>
+            }
+            @if (User.IsInRole("Staff"))
+            {
+                <!-- Staff thấy ghi chú vai trò của mình -->
+                <p class="nav-section" style="margin-top:1rem;">Vai Trò</p>
+                <div style="padding:8px 1.5rem;">
+                    <span style="font-size:0.72rem; color:#888; background:rgba(193,163,94,0.15);
+                         padding:3px 10px; border-radius:20px; letter-spacing:0.5px;">
+                        Nhân viên
+                    </span>
+                </div>
+            }
         </nav>
         <div class="sidebar-footer">
             <a href="/" target="_blank"><i class="fa fa-external-link-alt"></i> Xem Website</a>
