@@ -165,6 +165,33 @@
             font-weight: 600;
         }
 
+        /* ===== HERITAGE SECTION (MỚI THÊM) ===== */
+        .heritage-section {
+            /* Bạn có thể thay đổi link ảnh xưởng socola ở dòng dưới này */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.65), rgba(46, 32, 23, 0.7)), url('https://www.godiva.com/cdn/shop/files/Content-BG-A.jpg?v=1757991310&width=1920'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Tạo hiệu ứng parallax cuộn ảnh rất xịn */
+            padding: 8rem 0;
+        }
+        .heritage-content {
+            max-width: 650px;
+        }
+        .heritage-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            letter-spacing: 3px;
+            line-height: 1.3;
+            color: #fff;
+            text-transform: uppercase;
+        }
+        .heritage-text {
+            color: #f1f1f1;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 2.5rem;
+        }
+
         /* ===== BANNER CTA ===== */
         .cta-banner {
             background: var(--dark);
@@ -181,7 +208,6 @@
     </style>
 }
 
-<!-- ===== HERO BANNER ===== -->
 <div class="hero">
     <img src="https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=1600&q=80"
          class="hero-img" alt="Godiva Chocolate"
@@ -198,7 +224,6 @@
     </div>
 </div>
 
-<!-- ===== SẢN PHẨM NỔI BẬT ===== -->
 <section style="padding: 5rem 0; background:#fff;">
     <div class="container">
         <p class="section-eyebrow">Được Yêu Thích Nhất</p>
@@ -264,7 +289,21 @@
     </div>
 </section>
 
-<!-- ===== CTA BANNER ===== -->
+<section class="heritage-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-7 heritage-content">
+                <h2 class="heritage-title mb-4">DI SẢN BỈ VÔ SONG TỪ NĂM 1926</h2>
+                <p class="heritage-text">Trải qua gần 100 năm kể từ ngày thành lập tại Brussels, chúng tôi vẫn tiếp tục tôn vinh cội nguồn nước Bỉ bằng cam kết tuyệt đối về chất lượng, kỹ nghệ thủ công tinh xảo và những nguyên liệu hảo hạng nhất thế giới.</p>
+                
+                <a asp-controller="Home" asp-action="OurStory" class="btn btn-outline-light px-4 py-3" style="letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem; border-radius: 0;">
+                    Khám Phá Câu Chuyện
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
 <div class="cta-banner">
     <div class="container">
         <h2>Quà Tặng Hoàn Hảo</h2>

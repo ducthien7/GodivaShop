@@ -87,7 +87,7 @@
 
             @if (User.IsInRole("Admin"))
             {
-                <a asp-area="Admin" asp-controller="Category" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")"><i class="fa fa-tags"></i> Danh Mục</a>
+                //<a asp-area="Admin" asp-controller="Category" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")"><i class="fa fa-tags"></i> Danh Mục</a>
                 <a asp-area="Admin" asp-controller="Coupon" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Coupon" ? "active" : "")"><i class="fa fa-ticket-alt"></i> Mã Giảm Giá</a>
 
                 <p class="nav-section" style="margin-top: 1rem;">Người Dùng</p>
