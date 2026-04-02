@@ -20,8 +20,7 @@ public class ProductController : Controller
     }
 
     // Trang danh mục
-    public async Task<IActionResult> Category(
-   string? slug, decimal? minPrice, decimal? maxPrice, string? search)
+    public async Task<IActionResult> Category(string? slug, decimal? minPrice, decimal? maxPrice, string? search)
     {
         ViewBag.CartCount = _cart.GetCartCount();
         ViewBag.Categories = await _db.Categories
@@ -51,30 +50,7 @@ public class ProductController : Controller
 
         return View(await query.ToListAsync());
     }
-    /*
-    public async Task<IActionResult> Category(string? slug, decimal? minPrice, decimal? maxPrice)
-    {
-        ViewBag.CartCount = _cart.GetCartCount();
-        var categories = await _db.Categories.Where(c => c.IsActive).ToListAsync();
-        ViewBag.Categories = categories;
 
-        var query = _db.Products
-            .Include(p => p.Images)
-            .Include(p => p.Category)
-            .Where(p => p.IsActive);
-
-        if (!string.IsNullOrEmpty(slug))
-            query = query.Where(p => p.Category.Slug == slug);
-        if (minPrice.HasValue)
-            query = query.Where(p => p.BasePrice >= minPrice);
-        if (maxPrice.HasValue)
-            query = query.Where(p => p.BasePrice <= maxPrice);
-
-        var products = await query.ToListAsync();
-        ViewBag.CurrentSlug = slug;
-        return View(products);
-    }
-    */
     // Trang chi tiết sản phẩm
     public async Task<IActionResult> Detail(int id)
     {
@@ -83,8 +59,8 @@ public class ProductController : Controller
         var product = await _db.Products
             .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
             .Include(p => p.Variants
-                .Where(v => v.IsActive)          // ← chỉ lấy variant đang bật
-                .OrderBy(v => v.Price))          // ← sắp xếp theo giá tăng dần
+                .Where(v => v.IsActive)
+                .OrderBy(v => v.Price))
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
 
@@ -110,32 +86,34 @@ public class ProductController : Controller
         return Json(new { success = true, cartCount = _cart.GetCartCount() });
     }
 
-    // Trang bán chạy nhất
+    // ==========================================
+    // LOGIC BÁN CHẠY NHẤT (ĐÃ NÂNG CẤP)
+    // ==========================================
     public async Task<IActionResult> BestSellers()
     {
         ViewBag.CartCount = _cart.GetCartCount();
         ViewBag.Categories = await _db.Categories
             .Where(c => c.IsActive).ToListAsync();
 
-        // Lấy danh sách ID của sản phẩm bán chạy nhất
-        var topSellerIds = (await _bestSeller.GetTopSellingProductsAsync(12))
+        // 1. TỰ ĐỘNG: Lấy ID của top 12 sản phẩm bán chạy nhất từ Service
+        var autoTopSellerIds = (await _bestSeller.GetTopSellingProductsAsync(12))
             .Select(x => x.ProductId)
             .ToList();
 
-        // Lấy chi tiết sản phẩm
+        // 2. KẾT HỢP: Lấy sản phẩm có IsBestSeller (Admin ghim) HOẶC nằm trong Top tự động
         var bestSellers = await _db.Products
             .Include(p => p.Images)
             .Include(p => p.Category)
-            .Where(p => p.IsActive && topSellerIds.Contains(p.Id))
+            .Where(p => p.IsActive && (p.IsBestSeller || autoTopSellerIds.Contains(p.Id)))
             .ToListAsync();
 
-        // Sắp xếp theo thứ tự top sellers
+        // 3. SẮP XẾP THÔNG MINH: Ưu tiên hàng Admin ghim lên trước, sau đó mới xếp theo thứ tự bán chạy
         var orderedBestSellers = bestSellers
-            .OrderBy(p => topSellerIds.IndexOf(p.Id))
+            .OrderByDescending(p => p.IsBestSeller)
+            .ThenBy(p => autoTopSellerIds.IndexOf(p.Id) == -1 ? int.MaxValue : autoTopSellerIds.IndexOf(p.Id))
             .ToList();
 
         ViewBag.PageTitle = "Sản Phẩm Bán Chạy Nhất";
         return View("Category", orderedBestSellers);
     }
-
 }

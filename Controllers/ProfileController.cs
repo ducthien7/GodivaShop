@@ -7,52 +7,45 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GodivaShop.Web.Controllers
 {
-    [Authorize] // Bắt buộc phải đăng nhập mới được vào trang này
+    [Authorize]
     public class ProfileController : Controller
     {
         private readonly ApplicationDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager; // <--- THÊM MỚI
 
-        public ProfileController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        // Cập nhật Constructor để nhận thêm SignInManager
+        public ProfileController(ApplicationDbContext db,
+                                 UserManager<ApplicationUser> userManager,
+                                 SignInManager<ApplicationUser> signInManager) // <--- THÊM MỚI
         {
             _db = db;
             _userManager = userManager;
+            _signInManager = signInManager; // <--- THÊM MỚI
         }
 
         public async Task<IActionResult> Index()
         {
-            // 1. Lấy thông tin user đang đăng nhập
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return NotFound("Không tìm thấy thông tin người dùng.");
-            }
+            if (user == null) return NotFound("Không tìm thấy thông tin người dùng.");
 
-            // 2. Lấy lịch sử đơn hàng của user này (Sắp xếp từ mới nhất đến cũ nhất)
-            // Lưu ý: Đổi chữ 'Orders' thành tên bảng đơn hàng thực tế của bạn trong DbContext
             var orderHistory = await _db.Orders
                                         .Where(o => o.UserId == user.Id)
                                         .OrderByDescending(o => o.OrderDate)
                                         .ToListAsync();
 
-            // Nhét danh sách đơn hàng vào ViewBag để truyền sang View
             ViewBag.OrderHistory = orderHistory;
-
-            // Truyền thông tin User sang View
             return View(user);
         }
 
-        // Hiển thị form cập nhật
         [HttpGet]
         public async Task<IActionResult> Edit()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound("Không tìm thấy người dùng.");
-
             return View(user);
         }
 
-        // Xử lý khi khách hàng bấm nút Lưu
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ApplicationUser model)
@@ -60,17 +53,15 @@ namespace GodivaShop.Web.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound("Không tìm thấy người dùng.");
 
-            // Ghi đè thông tin mới vào thông tin cũ
             user.FullName = model.FullName;
             user.PhoneNumber = model.PhoneNumber;
             user.Address = model.Address;
 
-            // Lưu vào Database
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
                 TempData["SuccessMessage"] = "Cập nhật thông tin thành công!";
-                return RedirectToAction("Index"); // Quay lại trang hồ sơ
+                return RedirectToAction("Index");
             }
 
             ModelState.AddModelError("", "Có lỗi xảy ra khi lưu dữ liệu.");
@@ -83,17 +74,12 @@ namespace GodivaShop.Web.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound("Không tìm thấy người dùng.");
 
-            // Tìm đơn hàng theo ID. 
-            // Lưu ý BẢO MẬT: Phải check thêm UserId để tránh việc khách này xem lén đơn của khách khác
             var order = await _db.Orders
-                .Include(o => o.OrderItems)           // Lấy danh sách các món trong đơn
-                .ThenInclude(oi => oi.Product)        // Lấy luôn tên sản phẩm của từng món
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.Id == id && o.UserId == user.Id);
 
-            if (order == null)
-            {
-                return NotFound("Không tìm thấy đơn hàng hoặc bạn không có quyền xem đơn này.");
-            }
+            if (order == null) return NotFound("Không tìm thấy đơn hàng.");
 
             return View(order);
         }
@@ -105,26 +91,54 @@ namespace GodivaShop.Web.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
-            // Tìm đơn hàng của đúng User đó
             var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == id && o.UserId == user.Id);
-
             if (order == null) return NotFound("Đơn hàng không tồn tại.");
 
-            // Kiểm tra điều kiện: Chỉ được hủy khi trạng thái là Pending (Chờ xác nhận)
             if (order.Status != OrderStatus.Pending)
             {
-                TempData["Error"] = "Đơn hàng đã được xác nhận hoặc đang giao, không thể hủy.";
+                TempData["Error"] = "Đơn hàng không thể hủy.";
                 return RedirectToAction("OrderDetail", new { id = id });
             }
 
-            // Cập nhật trạng thái và lý do
             order.Status = OrderStatus.Cancelled;
             order.CancellationReason = cancellationReason;
-
             await _db.SaveChangesAsync();
 
             TempData["Success"] = "Đơn hàng đã được hủy thành công.";
             return RedirectToAction("Index");
+        }
+
+        // ==========================================
+        // CHỨC NĂNG MỚI: XÓA TÀI KHOẢN
+        // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAccount()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound("Không tìm thấy người dùng.");
+
+            // 1. Xử lý các đơn hàng liên quan (để tránh lỗi khóa ngoại trong Database)
+            // Chúng ta gán UserId = null để đơn hàng đó trở thành "Khách vãng lai"
+            var orders = await _db.Orders.Where(o => o.UserId == user.Id).ToListAsync();
+            foreach (var order in orders)
+            {
+                order.UserId = null;
+            }
+            await _db.SaveChangesAsync();
+
+            // 2. Thực hiện xóa User
+            var result = await _userManager.DeleteAsync(user);
+            if (result.Succeeded)
+            {
+                // 3. Đăng xuất ngay lập tức sau khi xóa thành công
+                await _signInManager.SignOutAsync();
+                TempData["SuccessMessage"] = "Tài khoản của bạn đã được xóa thành công.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            TempData["ErrorMessage"] = "Không thể xóa tài khoản lúc này.";
+            return RedirectToAction("Edit");
         }
     }
 }

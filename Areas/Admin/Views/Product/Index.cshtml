@@ -1,6 +1,11 @@
 ﻿@model IEnumerable<GodivaShop.Web.Models.Domain.Product>
 @{
     ViewData["Title"] = "Quản Lý Sản Phẩm"; Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    
+    // THÊM DÒNG NÀY ĐỂ NHẬN DANH SÁCH TOP BÁN CHẠY
+    var autoBestSellers = ViewBag.AutoBestSellers as List<int> ?? new List<int>();
+}
+    ViewData["Title"] = "Quản Lý Sản Phẩm"; Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -42,16 +47,28 @@
                     <td style="font-size:0.82rem;">@p.Category?.Name</td>
                     <td class="text-gold fw-semibold">@p.BasePrice.ToString("N0")đ</td>
                     <td>
-                        <button type="button" 
-                                class="btn btn-sm" 
-                                onclick="toggleBestSeller(@p.Id)"
-                                style="border:1px solid @(p.IsBestSeller ? "var(--gold)" : "#ccc"); 
-                                       color:@(p.IsBestSeller ? "var(--gold)" : "#999");
-                                       background:@(p.IsBestSeller ? "rgba(193,163,94,0.1)" : "#fff");
-                                       border-radius:0; padding:4px 8px;"
-                                title="@(p.IsBestSeller ? "Bỏ Best Seller" : "Đánh dấu Best Seller")">
-                            <i class="fa @(p.IsBestSeller ? "fa-star" : "fa-star-o")"></i>
-                        </button>
+                        <td class="text-center align-middle">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <button type="button"
+                                        class="btn btn-sm"
+                                        onclick="toggleBestSeller(@p.Id)"
+                                        style="border:1px solid @(p.IsBestSeller ? "var(--gold)" : "#ccc");
+                                    color:@(p.IsBestSeller ? "var(--gold)" : "#999");
+                                    background:@(p.IsBestSeller ? "rgba(193,163,94,0.1)" : "#fff");
+                                    border-radius:0; padding:4px 8px;"
+                                        title="@(p.IsBestSeller ? "Bỏ Best Seller" : "Đánh dấu Best Seller")">
+                                    <i class="fa @(p.IsBestSeller ? "fa-star" : "fa-star-o")"></i>
+                                </button>
+
+                                @if (!p.IsBestSeller && autoBestSellers.Contains(p.Id))
+                                {
+                                    <i class="fa fa-star"
+                                           style="color: #C1A35E; opacity: 0.4; font-size: 1.1rem; cursor: help;"
+                                           title="Hệ thống tự động xếp hạng Bán chạy">
+                                    </i>
+                                }
+                            </div>
+                        </td>
                     </td>
                     <td>
                         @if (p.IsActive)
