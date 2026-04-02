@@ -124,7 +124,7 @@
                     <div class="col-md-6">
                         <label asp-for="Email" class="form-label">Email *</label>
                         <input asp-for="Email" class="form-control"
-                               placeholder="your@email.com">
+                              required placeholder="your@email.com">
                         <span asp-validation-for="Email"
                               class="text-danger" style="font-size:0.75rem;"></span>
                     </div>
@@ -132,7 +132,7 @@
                     <div class="col-md-6">
                         <label asp-for="Phone" class="form-label">Số Điện Thoại *</label>
                         <input asp-for="Phone" class="form-control"
-                               placeholder="0912 345 678">
+                             required  placeholder="0912 345 678">
                         <span asp-validation-for="Phone"
                               class="text-danger" style="font-size:0.75rem;"></span>
                     </div>
@@ -142,7 +142,7 @@
                             Địa Chỉ Giao Hàng *
                         </label>
                         <input asp-for="ShippingAddress" class="form-control"
-                               placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành">
+                              required placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành">
                         <span asp-validation-for="ShippingAddress"
                               class="text-danger" style="font-size:0.75rem;"></span>
                     </div>
@@ -182,7 +182,7 @@
         <div class="form-check mb-3">
             <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payCOD" value="COD" checked>
             <label class="form-check-label d-flex align-items-center" for="payCOD">
-                <i class="fa fa-truck text-muted me-2" style="width: 20px;"></i>
+                <i class="fa fa-truck text-muted me-2 text-center" style="width: 25px; font-size: 1.2rem;"></i>
                 <div>
                     <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán khi nhận hàng (COD)</span>
                     <small class="text-muted" style="font-size: 0.75rem;">Thanh toán bằng tiền mặt khi shipper giao hàng đến.</small>
@@ -192,18 +192,33 @@
 
         <hr style="border-color: #eee;">
 
-        <div class="form-check">
+        <div class="form-check mb-3">
             <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payVNPay" value="VNPAY">
             <label class="form-check-label d-flex align-items-center" for="payVNPay">
-                <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/9/ad918b1d44834771966514713bc18efe.svg" alt="VNPay" class="me-2" style="height: 18px;">
+                <i class="fa fa-credit-card text-primary me-2 text-center" style="width: 25px; font-size: 1.2rem;"></i>
                 <div>
                     <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán qua VNPay</span>
                     <small class="text-muted" style="font-size: 0.75rem;">Thanh toán nhanh chóng qua QR Code hoặc thẻ ATM/Quốc tế.</small>
                 </div>
             </label>
         </div>
+
+        <hr style="border-color: #eee;">
+
+        <div class="form-check">
+            <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payVietQR" value="VIETQR">
+            <label class="form-check-label d-flex align-items-center" for="payVietQR">
+                <i class="fa fa-qrcode text-success me-2 text-center" style="width: 25px; font-size: 1.3rem;"></i>
+                <div>
+                    <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán qua VietQR</span>
+                    <small class="text-muted" style="font-size: 0.75rem;">Quét mã QR bằng ứng dụng ngân hàng (miễn phí giao dịch).</small>
+                </div>
+            </label>
+        </div>
+
     </div>
 </div>
+
 
                 <button type="submit"
                         class="btn btn-gold w-100 py-3 mt-4"
@@ -290,6 +305,8 @@
 </div>
 
 @section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
     <script>
         let totalAmount  = @Model.TotalAmount;
         let discountAmt  = 0;

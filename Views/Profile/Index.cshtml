@@ -1,0 +1,149 @@
+﻿@model GodivaShop.Web.Models.Domain.ApplicationUser
+@{
+    ViewData["Title"] = "Hồ sơ của tôi";
+    var orders = ViewBag.OrderHistory as List<GodivaShop.Web.Models.Domain.Order>;
+}
+
+<style>
+    .profile-header {
+        background: url('https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=1600') center/cover;
+        padding: 4rem 0;
+        position: relative;
+    }
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(26, 26, 26, 0.85); /* Phủ đen mờ sang trọng */
+    }
+    .profile-card {
+        border: none;
+        border-radius: 0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        background: var(--gold, #C1A35E);
+        color: #fff;
+        font-size: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: -60px auto 20px;
+        border: 5px solid #fff;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .order-table th {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #666;
+    }
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 5px 12px;
+        border-radius: 20px;
+    }
+</style>
+
+<div class="profile-header text-center text-white">
+    <div class="position-relative z-index-1" style="z-index: 1;">
+        <h1 class="serif" style="letter-spacing: 2px;">TÀI KHOẢN CỦA TÔI</h1>
+        <p class="small text-uppercase" style="letter-spacing: 2px; color: #C1A35E;">Godiva Member</p>
+    </div>
+</div>
+
+<div class="container" style="margin-top: -40px; margin-bottom: 5rem; position: relative; z-index: 2;">
+    <div class="row g-4">
+        
+        <div class="col-lg-4">
+            <div class="card profile-card h-100">
+                <div class="card-body text-center pt-0 px-4 pb-4">
+                    <div class="profile-avatar">
+                        @Model.Email.Substring(0, 1).ToUpper()
+                    </div>
+                    <h4 class="serif mb-1">@(string.IsNullOrEmpty(Model.FullName) ? "Khách Hàng" : Model.FullName)</h4>
+                    <p class="text-muted mb-4">@Model.Email</p>
+
+                    <div class="text-start">
+                        <p class="mb-2"><i class="fa fa-phone text-gold me-2" style="width:20px; color:#C1A35E;"></i> @(Model.PhoneNumber ?? "Chưa cập nhật")</p>
+                        <p class="mb-2"><i class="fa fa-map-marker-alt text-gold me-2" style="width:20px; color:#C1A35E;"></i> @(Model.Address ?? "Chưa cập nhật địa chỉ")</p>
+                        
+                    </div>
+
+                    <hr class="my-4">
+                    <a asp-controller="Profile" asp-action="Edit" class="btn btn-outline-dark w-100" style="border-radius:0; letter-spacing:1px; font-size:0.8rem;">CẬP NHẬT THÔNG TIN</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card profile-card h-100 p-4">
+                <h4 class="serif border-bottom pb-3 mb-4">Lịch Sử Đơn Hàng</h4>
+                
+                @if (orders == null || !orders.Any())
+                {
+                    <div class="text-center py-5">
+                        <i class="fa fa-shopping-bag fa-3x mb-3" style="color: #eee;"></i>
+                        <p class="text-muted">Bạn chưa có đơn hàng nào.</p>
+                        <a asp-controller="Product" asp-action="Category" class="btn btn-dark mt-2" style="border-radius:0; letter-spacing:1px; font-size:0.8rem;">MUA SẮM NGAY</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle order-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã Đơn</th>
+                                    <th>Ngày Đặt</th>
+                                    <th>Tổng Tiền</th>
+                                    <th>Trạng Thái</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in orders)
+                                {
+                                    <tr>
+                                        <td><strong>#@order.Id</strong></td>
+                                        <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td style="color: #C1A35E; font-weight:bold;">@order.TotalAmount.ToString("N0")đ</td>
+                                        <td>
+                                            @if (order.Status.ToString() == "Pending")
+                                            {
+                                                <span class="bg-warning text-dark status-badge">Chờ xử lý</span>
+                                            }
+                                            else if (order.Status.ToString() == "Shipped")
+                                            {
+                                                <span class="bg-info text-white status-badge">Đang giao</span>
+                                            }
+                                            else if (order.Status.ToString() == "Cancelled")
+                                            {
+                                                <span class="bg-danger text-white status-badge">Đã hủy</span>
+                                            }
+                                            else if (order.Status.ToString() == "Delivered")
+                                            {
+                                                <span class="bg-success text-white status-badge">Đã giao</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="bg-primary text-white status-badge">Đang xử lý</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                           <a asp-controller="Profile" asp-action="OrderDetail" asp-route-id="@order.Id" class="text-decoration-none text-dark" style="font-size:0.8rem;"><i class="fa fa-eye me-1"></i>Chi tiết</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>

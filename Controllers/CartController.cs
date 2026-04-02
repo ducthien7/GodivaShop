@@ -219,6 +219,11 @@ public class CartController : Controller
                 string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
                 return Redirect(paymentUrl);
             }
+            else if (order.PaymentMethod == "VIETQR") // THÊM NHÁNH NÀY
+            {
+                // Chuyển hướng sang trang hiển thị mã QR
+                return RedirectToAction("VietQRPayment", new { id = order.Id });
+            }
 
             await CompleteOrderLogic(order);
             return RedirectToAction("PaymentSuccess", new { id = order.Id });
@@ -227,6 +232,51 @@ public class CartController : Controller
         {
             return BadRequest($"Lỗi: {ex.Message}");
         }
+    }
+
+    // --- THÊM 2 ACTION MỚI DƯỚI NÀY ---
+
+    [HttpGet]
+    public async Task<IActionResult> VietQRPayment(int id)
+    {
+        var order = await _db.Orders.FindAsync(id);
+        if (order == null) return NotFound();
+
+        // Tính số tiền cuối cùng cần thanh toán
+        long finalAmount = (long)Math.Round(order.TotalAmount - order.DiscountAmount);
+
+        // Chuẩn bị dữ liệu VietQR
+        ViewBag.OrderId = order.Id;
+        ViewBag.FinalAmount = finalAmount;
+        ViewBag.OrderInfo = $"DH{order.Id}"; // Nội dung chuyển khoản (ko dấu)
+
+        // Setup cấu hình ngân hàng nhận (Thay bằng STK của bạn)
+        ViewBag.BankId = "mbbank";
+        ViewBag.AccountNo = "729876543210";
+        ViewBag.AccountName = "PHAN TUAN KIET";
+
+        return View(order);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmVietQRPayment(int orderId)
+    {
+        var order = await _db.Orders.FindAsync(orderId);
+        if (order == null) return NotFound();
+
+        // Giả lập webhook nhận tiền thành công
+        if (!order.IsPaid)
+        {
+            order.IsPaid = true;
+            order.Status = OrderStatus.Confirmed; // Chuyển trạng thái
+            await _db.SaveChangesAsync();
+
+            // Gọi logic chốt đơn (Gửi mail, clear giỏ hàng, bắn SignalR)
+            await CompleteOrderLogic(order);
+        }
+
+        return RedirectToAction("PaymentSuccess", new { id = order.Id });
     }
 
     [HttpGet]
