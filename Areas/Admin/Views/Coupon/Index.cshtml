@@ -1,144 +1,342 @@
 ﻿@model IEnumerable<GodivaShop.Web.Models.Domain.Coupon>
 @using GodivaShop.Web.Models.Domain
-
 @{
-    ViewData["Title"] = "Quản lý Mã Giảm Giá";
-    
+    ViewData["Title"] = "Quản Lý Mã Giảm Giá";
 }
 
-<div class="container-fluid pt-4 px-4">
-    <div class="bg-light rounded p-4">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <h4 class="mb-0 text-dark">Danh sách Mã Giảm Giá</h4>
-            <button type="button" class="btn btn-primary" style="background-color: #cba052; border: none;" data-bs-toggle="modal" data-bs-target="#createCouponModal">
-                + Tạo Mã Mới
-            </button>
-        </div>
+@section Styles {
+<style>
+    .coupon-code {
+        font-family: 'Courier New', monospace;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gold);
+        letter-spacing: 1px;
+    }
+    .discount-val {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #e74c3c;
+    }
+    .progress-bar-wrap {
+        background: #f0ede8;
+        height: 4px;
+        border-radius: 2px;
+        margin-top: 4px;
+        min-width: 60px;
+    }
+    .progress-bar-fill {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--gold);
+    }
+    /* Modal style */
+    .modal-content { border-radius: 0; border: none; }
+    .modal-header  { border-bottom: 1px solid #f0ede8; padding: 1.2rem 1.5rem; }
+    .modal-footer  { border-top: 1px solid #f0ede8; padding: 1rem 1.5rem; }
+    .modal-title   {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        color: #1a1a1a;
+    }
+    .modal-form-label {
+        font-size: 0.7rem;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #888;
+        margin-bottom: 5px;
+        display: block;
+    }
+    .empty-state { text-align: center; padding: 4rem 0; }
+    .empty-state i { font-size: 3rem; color: #e0d5c5; display: block; margin-bottom: 1rem; }
+</style>
+}
 
-        <div class="table-responsive">
-            <table class="table text-start align-middle table-bordered table-hover mb-0">
-                <thead class="text-dark" style="background-color: #fcfaf7;">
-                    <tr>
-                        <th>Mã Code</th>
-                        <th>Khuyến Mãi</th>
-                        <th>Đơn Tối Thiểu</th>
-                        <th>Đã Dùng</th>
-                        <th>Hạn Sử Dụng</th>
-                        <th>Trạng Thái</th>
-                        <th class="text-center">Hành Động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td><strong class="text-uppercase">@item.Code</strong></td>
-                            <td>
-                                @if (item.DiscountType == DiscountType.Percentage)
-                                {
-                                    <span class="text-danger fw-bold">-@item.DiscountValue.ToString("0.##")%</span>
-                                }
-                                else
-                                {
-                                    <span class="text-danger fw-bold">-@item.DiscountValue.ToString("N0") đ</span>
-                                }
-                            </td>
-                            <td>@(item.MinOrderAmount?.ToString("N0") + " đ" ?? "Không yêu cầu")</td>
-                            <td>@item.UsedCount / @(item.MaxUsageCount?.ToString() ?? "∞")</td>
-                            <td>
-                                @if (item.ExpiryDate.HasValue)
-                                {
-                                    if (item.ExpiryDate.Value < DateTime.Now)
-                                    {
-                                        <span class="badge bg-danger">Hết hạn (@item.ExpiryDate.Value.ToString("dd/MM/yyyy"))</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-info">@item.ExpiryDate.Value.ToString("dd/MM/yyyy")</span>
-                                    }
-                                }
-                                else
-                                {
-                                    <span>Vĩnh viễn</span>
-                                }
-                            </td>
-                            <td>
-                                @if (item.IsActive)
-                                {
-                                    <span class="badge bg-success">Đang Bật</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">Đang Tắt</span>
-                                }
-                            </td>
-                            <td class="text-center">
-                                <form asp-action="Toggle" asp-route-id="@item.Id" method="post" style="display:inline;">
-                                    <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="Bật/Tắt">
-                                        <i class="fas @(item.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
-                                    </button>
-                                </form>
-                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa mã @item.Code này không?');">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <p class="text-muted mb-0" style="font-size:0.75rem;">
+            Tổng: <strong>@Model.Count()</strong> mã —
+            Đang bật: <strong class="text-gold">@Model.Count(c => c.IsActive)</strong>
+        </p>
     </div>
+    <button type="button"
+            class="btn btn-admin-gold"
+            data-bs-toggle="modal"
+            data-bs-target="#createCouponModal">
+        <i class="fa fa-plus me-2"></i>Tạo Mã Mới
+    </button>
 </div>
 
+<!-- TABLE -->
+<div style="background:#fff;">
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fa fa-ticket-alt"></i>
+            <p class="text-muted small">Chưa có mã giảm giá nào.</p>
+            <button type="button"
+                    class="btn btn-admin-gold mt-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createCouponModal">
+                Tạo mã đầu tiên
+            </button>
+        </div>
+    }
+    else
+    {
+        <table class="table admin-table mb-0">
+            <thead>
+                <tr>
+                    <th>Mã Code</th>
+                    <th>Loại & Mức Giảm</th>
+                    <th>Đơn Tối Thiểu</th>
+                    <th>Lượt Dùng</th>
+                    <th>Hết Hạn</th>
+                    <th>Trạng Thái</th>
+                    <th class="text-center">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var isExpired = item.ExpiryDate.HasValue
+                                 && item.ExpiryDate.Value < DateTime.Now;
+                    var usedPct   = item.MaxUsageCount.HasValue && item.MaxUsageCount > 0
+                                  ? (int)Math.Min(100, item.UsedCount * 100.0 / item.MaxUsageCount.Value)
+                                  : 0;
+                    <tr>
+                        <!-- MÃ CODE -->
+                        <td>
+                            <span class="coupon-code">@item.Code</span>
+                        </td>
+
+                        <!-- LOẠI & MỨC GIẢM -->
+                        <td>
+                            @if (item.DiscountType == DiscountType.Percentage)
+                            {
+                                <span class="discount-val">
+                                    −@item.DiscountValue.ToString("0.##")%
+                                </span>
+                                <div class="text-muted" style="font-size:0.72rem;">
+                                    Theo phần trăm
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="discount-val">
+                                    −@item.DiscountValue.ToString("N0")đ
+                                </span>
+                                <div class="text-muted" style="font-size:0.72rem;">
+                                    Trừ thẳng tiền
+                                </div>
+                            }
+                        </td>
+
+                        <!-- ĐƠN TỐI THIỂU -->
+                        <td style="font-size:0.82rem;">
+                            @if (item.MinOrderAmount.HasValue)
+                            {
+                                <span>@item.MinOrderAmount.Value.ToString("N0")đ</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không yêu cầu</span>
+                            }
+                        </td>
+
+                        <!-- LƯỢT DÙNG -->
+                        <td>
+                            <div style="font-size:0.82rem;">
+                                <strong>@item.UsedCount</strong>
+                                <span class="text-muted">
+                                    / @(item.MaxUsageCount?.ToString() ?? "∞")
+                                </span>
+                            </div>
+                            @if (item.MaxUsageCount.HasValue)
+                            {
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill"
+                                         style="width:@usedPct%"></div>
+                                </div>
+                            }
+                        </td>
+
+                        <!-- HẾT HẠN -->
+                        <td style="font-size:0.82rem;">
+                            @if (item.ExpiryDate.HasValue)
+                            {
+                                if (isExpired)
+                                {
+                                    <span class="badge-status badge-cancelled">
+                                        Hết hạn
+                                    </span>
+                                    <div class="text-muted mt-1" style="font-size:0.72rem;">
+                                        @item.ExpiryDate.Value.ToString("dd/MM/yyyy")
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span>@item.ExpiryDate.Value.ToString("dd/MM/yyyy")</span>
+
+                                    // Khai báo trực tiếp, không dùng ngoặc nhọn bọc lại
+                                    var daysLeft = (item.ExpiryDate.Value - DateTime.Now).Days;
+
+                                    if (daysLeft <= 7)
+                                    {
+                                        <div style="font-size:0.7rem; color:#e74c3c;">
+                                            Còn @daysLeft ngày
+                                        </div>
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Vĩnh viễn</span>
+                            }
+                        </td>
+
+                        <!-- TRẠNG THÁI -->
+                        <td>
+                            @if (isExpired)
+                            {
+                                <span class="badge-status badge-cancelled">Hết hạn</span>
+                            }
+                            else if (item.IsActive)
+                            {
+                                <span class="badge-status badge-delivered">Đang bật</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-cancelled">Đang tắt</span>
+                            }
+                        </td>
+
+                        <!-- THAO TÁC -->
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <!-- Bật / Tắt -->
+                                <form asp-area="Admin"
+                                      asp-controller="Coupon"
+                                      asp-action="Toggle"
+                                      asp-route-id="@item.Id"
+                                      method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="btn btn-sm btn-admin-outline"
+                                            title="@(item.IsActive ? "Tắt mã" : "Bật mã")">
+                                        <i class="fa @(item.IsActive ? "fa-toggle-on text-gold" : "fa-toggle-off")"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Xóa -->
+                                <form asp-area="Admin"
+                                      asp-controller="Coupon"
+                                      asp-action="Delete"
+                                      asp-route-id="@item.Id"
+                                      method="post"
+                                      onsubmit="return confirm('Xóa mã @item.Code?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="btn btn-sm"
+                                            style="border:1px solid #e74c3c; color:#e74c3c;
+                                                   border-radius:0; padding:4px 8px;"
+                                            title="Xóa mã">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<!-- ===== MODAL TẠO MÃ MỚI ===== -->
 <div class="modal fade" id="createCouponModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:480px;">
         <div class="modal-content">
-            <div class="modal-header" style="background-color: #fcfaf7;">
-                <h5 class="modal-title text-dark">Tạo Mã Giảm Giá Mới</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fa fa-ticket-alt me-2 text-gold"></i>
+                    Tạo Mã Giảm Giá Mới
+                </h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="Create" method="post">
-                <div class="modal-body">
+
+            <form asp-area="Admin"
+                  asp-controller="Coupon"
+                  asp-action="Create"
+                  method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body" style="padding:1.5rem;">
                     <div class="mb-3">
-                        <label class="form-label">Mã Code (VD: GODIVA2026)</label>
-                        <input type="text" name="Code" class="form-control text-uppercase" required>
+                        <label class="modal-form-label">Mã Code *</label>
+                        <input type="text"
+                               name="Code"
+                               class="form-control admin-form-control"
+                               placeholder="VD: GODIVA2026"
+                               style="text-transform:uppercase; letter-spacing:2px;"
+                               required>
                     </div>
-                    
-                    <div class="row mb-3">
+
+                    <div class="row g-3 mb-3">
                         <div class="col-6">
-                            <label class="form-label">Loại Giảm</label>
-                            <select name="DiscountType" class="form-select">
-                                <option value="Percentage">Theo Phần Trăm (%)</option>
-                                <option value="FixedAmount">Trừ Thẳng Tiền (VNĐ)</option>
+                            <label class="modal-form-label">Loại Giảm Giá</label>
+                            <select name="DiscountType"
+                                    class="form-select admin-form-control">
+                                <option value="0">Phần trăm (%)</option>
+                                <option value="1">Trừ thẳng (VNĐ)</option>
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label">Mức Giảm</label>
-                            <input type="number" name="DiscountValue" class="form-control" required min="1">
+                            <label class="modal-form-label">Mức Giảm *</label>
+                            <input type="number"
+                                   name="DiscountValue"
+                                   class="form-control admin-form-control"
+                                   placeholder="VD: 10 hoặc 50000"
+                                   min="1" required>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Đơn Hàng Tối Thiểu (VNĐ) - <i>Tùy chọn</i></label>
-                        <input type="number" name="MinOrderAmount" class="form-control" placeholder="Để trống nếu không yêu cầu">
+                        <label class="modal-form-label">Đơn Hàng Tối Thiểu (VNĐ)</label>
+                        <input type="number"
+                               name="MinOrderAmount"
+                               class="form-control admin-form-control"
+                               placeholder="Để trống = không yêu cầu">
                     </div>
 
-                    <div class="row mb-3">
+                    <div class="row g-3 mb-3">
                         <div class="col-6">
-                            <label class="form-label">Giới Hạn Lượt Dùng</label>
-                            <input type="number" name="MaxUsageCount" class="form-control" placeholder="Để trống = Vô hạn">
+                            <label class="modal-form-label">Giới Hạn Lượt Dùng</label>
+                            <input type="number"
+                                   name="MaxUsageCount"
+                                   class="form-control admin-form-control"
+                                   placeholder="Để trống = vô hạn">
                         </div>
                         <div class="col-6">
-                            <label class="form-label">Ngày Hết Hạn</label>
-                            <input type="date" name="ExpiryDate" class="form-control">
+                            <label class="modal-form-label">Ngày Hết Hạn</label>
+                            <input type="date"
+                                   name="ExpiryDate"
+                                   class="form-control admin-form-control">
                         </div>
                     </div>
+
+                    <input type="hidden" name="IsActive" value="true">
+                    <input type="hidden" name="UsedCount" value="0">
                 </div>
+
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary" style="background-color: #cba052; border: none;">Lưu Mã</button>
+                    <button type="button"
+                            class="btn btn-admin-outline"
+                            data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-admin-gold px-5">
+                        <i class="fa fa-save me-2"></i>Lưu Mã
+                    </button>
                 </div>
             </form>
         </div>

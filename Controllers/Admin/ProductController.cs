@@ -311,18 +311,73 @@ public class ProductController : Controller
             .Replace("ỹ", "y").Replace("ỵ", "y");
     }
 
-    // Toggle Best Seller status
+ 
+    // Thêm 3 action này vào Controllers/Admin/ProductController.cs
+    // (giữ nguyên các action cũ, chỉ thêm các action bên dưới)
+
+    // ===== TOGGLE ẨN/HIỆN (thay thế action Delete cũ) =====
+    [HttpPost]
+    public async Task<IActionResult> ToggleActive(int id)
+    {
+        var product = await _db.Products.FindAsync(id);
+        if (product == null) return NotFound();
+
+        product.IsActive = !product.IsActive;
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = product.IsActive
+            ? $"Đã hiện sản phẩm '{product.Name}'"
+            : $"Đã ẩn sản phẩm '{product.Name}'";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    // ===== XÓA VĨNH VIỄN =====
+    [HttpPost]
+    public async Task<IActionResult> HardDelete(int id)
+    {
+        var product = await _db.Products
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (product == null) return NotFound();
+
+        // Xóa file ảnh vật lý
+        foreach (var img in product.Images)
+        {
+            var relativePath = img.ImagePath.Replace("~/", "");
+            var fullPath = Path.Combine(_env.WebRootPath,
+                relativePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+            if (System.IO.File.Exists(fullPath))
+                System.IO.File.Delete(fullPath);
+        }
+
+        _db.Products.Remove(product);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = $"Đã xóa vĩnh viễn sản phẩm '{product.Name}'";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // ===== TOGGLE BEST SELLER (AJAX) =====
     [HttpPost]
     public async Task<IActionResult> ToggleBestSeller(int id)
     {
         var product = await _db.Products.FindAsync(id);
         if (product == null)
-            return Json(new { success = false, message = "Sản phẩm không tồn tại" });
+            return Json(new { success = false, message = "Không tìm thấy sản phẩm" });
 
         product.IsBestSeller = !product.IsBestSeller;
-        _db.Products.Update(product);
         await _db.SaveChangesAsync();
 
-        return Json(new { success = true, isBestSeller = product.IsBestSeller });
+        return Json(new
+        {
+            success = true,
+            isBestSeller = product.IsBestSeller,
+            message = product.IsBestSeller
+                ? $"Đã đánh dấu '{product.Name}' là Best Seller"
+                : $"Đã bỏ Best Seller '{product.Name}'"
+        });
     }
 }

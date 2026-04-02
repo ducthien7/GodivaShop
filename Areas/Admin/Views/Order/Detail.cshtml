@@ -47,7 +47,17 @@
                 <select name="status" class="form-select admin-form-control mb-2">
                     @foreach (OrderStatus status in Enum.GetValues(typeof(OrderStatus)))
                     {
-                        <!option value="@status" @(Model.Status == status ? "selected" : "")>@status</!option>
+                        var displayStatus = status switch
+                        {
+                            OrderStatus.Pending => "Chờ xử lý",
+                            OrderStatus.Confirmed => "Đã xác nhận",
+                            OrderStatus.Processing => "Đang xử lý",
+                            OrderStatus.Shipped => "Đang giao hàng",
+                            OrderStatus.Delivered => "Đã giao hàng",
+                            OrderStatus.Cancelled => "Đã hủy",
+                            _ => status.ToString()
+                        };
+                        <!option value="@status" @(Model.Status == status ? "selected" : "")>@displayStatus</!option>
                     }
                 </select>
                 <button type="submit" class="btn btn-admin-gold w-100">

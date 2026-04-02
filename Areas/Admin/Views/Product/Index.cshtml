@@ -10,13 +10,25 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="input-group" style="width:280px;">
-        <input type="text" class="form-control admin-form-control" placeholder="Tìm sản phẩm..." id="searchProd" oninput="searchProd()">
-        <span class="input-group-text" style="border-radius:0; background:#fff;"><i class="fa fa-search text-muted"></i></span>
+        <input type="text" class="form-control admin-form-control"
+               placeholder="Tìm sản phẩm..." id="searchProd" oninput="searchProd()">
+        <span class="input-group-text" style="border-radius:0; background:#fff;">
+            <i class="fa fa-search text-muted"></i>
+        </span>
     </div>
-    <a asp-area="Admin" asp-controller="Product" asp-action="Create" class="btn btn-admin-gold">
+    <a asp-area="Admin" asp-controller="Product" asp-action="Create"
+       class="btn btn-admin-gold">
         <i class="fa fa-plus me-2"></i>Thêm Sản Phẩm
     </a>
 </div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success mb-3"
+         style="border-radius:0; border-left:3px solid #2ecc71; font-size:0.85rem;">
+        <i class="fa fa-check me-2"></i>@TempData["Success"]
+    </div>
+}
 
 <div style="background:#fff;">
     <table class="table admin-table mb-0" id="prodTable">
@@ -34,18 +46,32 @@
         <tbody>
             @foreach (var p in Model)
             {
-                var img = p.Images.FirstOrDefault(i => i.IsMain)?.ImagePath ?? p.Images.FirstOrDefault()?.ImagePath ?? "";
+                var img = p.Images.FirstOrDefault(i => i.IsMain)?.ImagePath
+                ?? p.Images.FirstOrDefault()?.ImagePath ?? "";
                 <tr class="prod-row" data-search="@p.Name.ToLower()">
+
+                    <!-- ẢNH -->
                     <td>
-                        <img src="@Url.Content(img)" style="width:50px; height:50px; object-fit:cover;"
-                             onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=50'">
+                        <img src="@Url.Content(img)"
+                             style="width:52px; height:52px; object-fit:cover;"
+                             onerror="this.src='https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=52'">
                     </td>
+
+                    <!-- TÊN -->
                     <td>
                         <div class="fw-semibold" style="font-size:0.85rem;">@p.Name</div>
-                        <div class="text-muted" style="font-size:0.75rem;">@p.Slug</div>
+                        <div class="text-muted" style="font-size:0.72rem;">@p.Slug</div>
                     </td>
+
+                    <!-- DANH MỤC -->
                     <td style="font-size:0.82rem;">@p.Category?.Name</td>
-                    <td class="text-gold fw-semibold">@p.BasePrice.ToString("N0")đ</td>
+
+                    <!-- GIÁ -->
+                    <td class="text-gold fw-semibold" style="font-size:0.85rem;">
+                        @p.BasePrice.ToString("N0")đ
+                    </td>
+
+                    <!-- BEST SELLER: dùng opacity thay vì fa-star-o không tồn tại trong FA6 -->
                     <td>
                         <td class="text-center align-middle">
                             <div class="d-flex align-items-center justify-content-center gap-2">
@@ -70,18 +96,31 @@
                             </div>
                         </td>
                     </td>
+
+                    <!-- TRẠNG THÁI -->
                     <td>
                         @if (p.IsActive)
                         {
-                            <span class="badge" style="background:#d4edda; color:#155724; font-weight:400; font-size:0.7rem;">Hiển thị</span>
+                            <span class="badge"
+                                  style="background:#d4edda; color:#155724;
+                                         font-weight:400; font-size:0.7rem;">
+                                Hiển thị
+                            </span>
                         }
                         else
                         {
-                            <span class="badge" style="background:#f8d7da; color:#721c24; font-weight:400; font-size:0.7rem;">Ẩn</span>
+                            <span class="badge"
+                                  style="background:#f8d7da; color:#721c24;
+                                         font-weight:400; font-size:0.7rem;">
+                                Đang ẩn
+                            </span>
                         }
                     </td>
+
+                    <!-- THAO TÁC -->
                     <td>
                         <div class="d-flex gap-1 flex-wrap">
+
                             <!-- Sửa -->
                             <a asp-area="Admin"
                                asp-controller="Product"
@@ -92,30 +131,47 @@
                                 <i class="fa fa-edit"></i>
                             </a>
 
-                            <!-- Xem ngoài website -->
+                            <!-- Xem website -->
                             <a href="/Product/Detail/@p.Id"
                                target="_blank"
                                class="btn btn-sm"
                                style="border:1px solid #17a2b8; color:#17a2b8;
-                  border-radius:0; padding:4px 8px;"
-                               title="Xem ngoài website">
+                                      border-radius:0; padding:4px 8px;"
+                               title="Xem trên website">
                                 <i class="fa fa-eye"></i>
                             </a>
 
-                            <!-- Ẩn/Hiện -->
+                            <!-- Ẩn / Hiện (Soft delete toggle) -->
                             <form asp-area="Admin"
                                   asp-controller="Product"
-                                  asp-action="Delete"
-                                  method="post"
-                                  onsubmit="return confirm('@(p.IsActive ? "Ẩn" : "Hiện") sản phẩm này?')">
+                                  asp-action="ToggleActive"
+                                  method="post" style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@p.Id">
+                                <button type="submit"
+                                        class="btn btn-sm"
+                                        style="border:1px solid @(p.IsActive ? "#e67e22" : "#27ae60");
+                                               color:@(p.IsActive ? "#e67e22" : "#27ae60");
+                                               border-radius:0; padding:4px 8px;"
+                                        title="@(p.IsActive ? "Ẩn sản phẩm" : "Hiện sản phẩm")">
+                                    <i class="fa @(p.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
+                                </button>
+                            </form>
+
+                            <!-- Xóa hẳn -->
+                            <form asp-area="Admin"
+                                  asp-controller="Product"
+                                  asp-action="HardDelete"
+                                  method="post" style="margin:0;"
+                                  onsubmit="return confirm('Xóa vĩnh viễn sản phẩm \'@p.Name\'?\nHành động này không thể hoàn tác!')">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@p.Id">
                                 <button type="submit"
                                         class="btn btn-sm"
                                         style="border:1px solid #e74c3c; color:#e74c3c;
-                           border-radius:0; padding:4px 8px;"
-                                        title="@(p.IsActive ? "Ẩn sản phẩm" : "Hiện sản phẩm")">
-                                    <i class="fa @(p.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
+                                               border-radius:0; padding:4px 8px;"
+                                        title="Xóa vĩnh viễn">
+                                    <i class="fa fa-trash"></i>
                                 </button>
                             </form>
                         </div>
@@ -129,21 +185,36 @@
 @section Scripts {
     <script>
         function searchProd() {
-            const t = $('#searchProd').val().toLowerCase();
-            $('.prod-row').each(function() { $(this).toggle($(this).data('search').includes(t)); });
+            const t = document.getElementById('searchProd').value.toLowerCase();
+            document.querySelectorAll('.prod-row').forEach(row => {
+                row.style.display = row.dataset.search.includes(t) ? '' : 'none';
+            });
         }
 
         function toggleBestSeller(productId) {
-            $.post('/Admin/Product/ToggleBestSeller', { id: productId }, function(res) {
-                if (res.success) {
-                    // Reload table
-                    location.reload();
-                } else {
-                    alert(res.message || 'Lỗi khi cập nhật');
-                }
-            }).fail(function() {
-                alert('Lỗi kết nối');
-            });
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+            const btn = document.getElementById('star-' + productId);
+
+            fetch('/Admin/Product/ToggleBestSeller', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: 'id=' + productId
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        // Đổi opacity thay vì reload trang
+                        const isBest = res.isBestSeller;
+                        btn.style.opacity = isBest ? '1' : '0.25';
+                        btn.title = isBest ? 'Bỏ Best Seller' : 'Đánh dấu Best Seller';
+                    } else {
+                        alert(res.message || 'Lỗi khi cập nhật');
+                    }
+                })
+                .catch(() => alert('Lỗi kết nối'));
         }
     </script>
 }

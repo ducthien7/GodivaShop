@@ -1,22 +1,48 @@
 ﻿@model IEnumerable<GodivaShop.Web.Models.Domain.ApplicationUser>
-@{ ViewData["Title"] = "Quản Lý Tài Khoản"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+@{
+    ViewData["Title"] = "Quản Lý Tài Khoản";
+}
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success mb-3"
+         style="border-radius:0; border-left:3px solid #2ecc71; font-size:0.85rem;">
+        <i class="fa fa-check me-2"></i>@TempData["Success"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger mb-3"
+         style="border-radius:0; border-left:3px solid #e74c3c; font-size:0.85rem;">
+        <i class="fa fa-times me-2"></i>@TempData["Error"]
+    </div>
+}
+
+<!-- HEADER -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="input-group" style="width:300px;">
-        <input type="text" class="form-control admin-form-control" placeholder="Tìm kiếm..." id="searchUser" oninput="searchUser()">
-        <span class="input-group-text" style="border-radius:0; background:#fff;"><i class="fa fa-search text-muted"></i></span>
+    <div class="input-group" style="width:280px;">
+        <input type="text" class="form-control admin-form-control"
+               placeholder="Tìm tên, email..." id="searchUser" oninput="searchUser()">
+        <span class="input-group-text" style="border-radius:0; background:#fff;">
+            <i class="fa fa-search text-muted"></i>
+        </span>
     </div>
-    <div class="d-flex gap-2 align-items-center">
-        <span class="small text-muted">Tổng: <strong>@Model.Count()</strong> tài khoản</span>
-    </div>
+    <p class="text-muted small mb-0">
+        Tổng: <strong>@Model.Count()</strong> tài khoản
+    </p>
 </div>
 
+<!-- TABLE -->
 <div style="background:#fff;">
     <table class="table admin-table mb-0">
         <thead>
             <tr>
-                <th>Tài Khoản</th><th>Email</th><th>Số Điện Thoại</th>
-                <th>Ngày Tạo</th><th>Vai Trò Hiện Tại</th><th>Thay Đổi Role</th>
+                <th>Tài Khoản</th>
+                <th>Email</th>
+                <th>Số Điện Thoại</th>
+                <th>Ngày Tạo</th>
+                <th>Vai Trò</th>
+                <th>Thao Tác</th>
             </tr>
         </thead>
         <tbody>
@@ -24,44 +50,114 @@
             {
                 var roles = ((Dictionary<string, IList<string>>)ViewBag.UserRoles)[user.Id];
                 var currentRole = roles.FirstOrDefault() ?? "Customer";
-                <tr class="user-row" data-search="@($"{user.FullName} {user.Email}".ToLower())">
+                var roleStyle = currentRole switch
+                {
+                    "Admin" => "background:#1a1a1a; color:#C1A35E",
+                    "Staff" => "background:#e8f0ff; color:#1a5cb8",
+                    _ => "background:#f0ebe0; color:#C1A35E"
+                };
+                <tr class="user-row"
+                    data-search="@($"{user.FullName} {user.Email}".ToLower())">
+
+                    <!-- AVATAR + TÊN -->
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div style="width:36px; height:36px; background:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.85rem; font-family:'Playfair Display',serif; flex-shrink:0;">
-                                @(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")
+                            <div style="width:38px; height:38px; border-radius:50%;
+                                        background:var(--gold); flex-shrink:0;
+                                        display:flex; align-items:center; justify-content:center;
+                                        color:#fff; font-family:'Playfair Display',serif;
+                                        font-size:1rem;">
+                                @(user.FullName?.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")
                             </div>
                             <div>
-                                <div class="fw-semibold" style="font-size:0.85rem;">@user.FullName</div>
-                                <div class="text-muted" style="font-size:0.72rem;">ID: @user.Id[..8]...</div>
+                                <div class="fw-semibold" style="font-size:0.85rem;">
+                                    @user.FullName
+                                </div>
+                                <div class="text-muted" style="font-size:0.7rem;">
+                                    ID: @user.Id[..8]...
+                                </div>
                             </div>
                         </div>
                     </td>
+
                     <td style="font-size:0.82rem;">@user.Email</td>
-                    <td style="font-size:0.82rem;">@(user.Phone ?? "—")</td>
-                    <td class="text-muted" style="font-size:0.8rem;">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
-                    <td>
-                        @{
-                            var badgeColor = currentRole switch {
-                                "Admin" => "background:#1a1a1a; color:#C1A35E",
-                                "Staff" => "background:#e8f0ff; color:#1a5cb8",
-                                _ => "background:#f0ebe0; color:#C1A35E"
-                            };
-                        }
-                        <span class="badge" style="@badgeColor; font-weight:400; font-size:0.7rem; letter-spacing:1px;">@currentRole</span>
+
+                    <td style="font-size:0.82rem;">
+                        @(string.IsNullOrEmpty(user.Phone) ? "—" : user.Phone)
                     </td>
+
+                    <td class="text-muted" style="font-size:0.78rem;">
+                        @user.CreatedAt.ToString("dd/MM/yyyy")
+                    </td>
+
+                    <!-- VAI TRÒ -->
                     <td>
-                        <form asp-area="Admin" asp-controller="User" asp-action="ChangeRole" method="post" class="d-flex gap-2 align-items-center">
-                            <input type="hidden" name="userId" value="@user.Id">
-                            <select name="newRole" class="form-select admin-form-control" style="width:130px;">
-                                @foreach (var role in (IEnumerable<string?>)ViewBag.AllRoles)
-                                {
-                                    <!option value="@role" @(currentRole == role ? "selected" : "")>@role</!option>
-                                }
-                            </select>
-                            <button type="submit" class="btn btn-admin-gold" style="padding:6px 14px;">
-                                <i class="fa fa-check"></i>
+                        <span class="badge"
+                              style="@roleStyle; font-weight:400;
+                                     font-size:0.7rem; letter-spacing:0.5px;">
+                            @currentRole
+                        </span>
+                    </td>
+
+                    <!-- THAO TÁC -->
+                    <td>
+                        <div class="d-flex gap-1 flex-wrap">
+
+                            <!-- Xem chi tiết -->
+                            <button type="button"
+                                    class="btn btn-sm btn-admin-outline"
+                                    title="Xem chi tiết"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#detailModal"
+                                    onclick="showDetail(
+                                        '@user.FullName',
+                                        '@user.Email',
+                                        '@user.Phone',
+                                        '@user.Address',
+                                        '@user.CreatedAt.ToString("dd/MM/yyyy")',
+                                        '@currentRole')">
+                                <i class="fa fa-eye"></i>
                             </button>
-                        </form>
+
+                            <!-- Đổi role -->
+                            <button type="button"
+                                    class="btn btn-sm btn-admin-gold"
+                                    title="Thay đổi vai trò"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#roleModal"
+                                    onclick="setRoleUser('@user.Id', '@user.FullName', '@currentRole')">
+                                <i class="fa fa-user-tag"></i>
+                            </button>
+
+                            <!-- Xóa tài khoản -->
+                            @if (currentRole != "Admin")
+                            {
+                                <form asp-area="Admin"
+                                      asp-controller="User"
+                                      asp-action="Delete"
+                                      method="post" style="margin:0;"
+                                      onsubmit="return confirm('Xóa tài khoản @user.FullName (@user.Email)?\nHành động này không thể hoàn tác!')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@user.Id">
+                                    <button type="submit"
+                                            class="btn btn-sm"
+                                            style="border:1px solid #e74c3c; color:#e74c3c;
+                                                   border-radius:0; padding:4px 8px;"
+                                            title="Xóa tài khoản">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm" disabled
+                                        style="border:1px solid #ddd; color:#ccc;
+                                               border-radius:0; padding:4px 8px;"
+                                        title="Không thể xóa Admin">
+                                    <i class="fa fa-lock"></i>
+                                </button>
+                            }
+                        </div>
                     </td>
                 </tr>
             }
@@ -69,11 +165,129 @@
     </table>
 </div>
 
+<!-- MODAL: Chi tiết tài khoản -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:440px;">
+        <div class="modal-content" style="border-radius:0; border:none;">
+            <div class="modal-header" style="border-bottom:1px solid #f0ede8; padding:1.2rem 1.5rem;">
+                <h5 class="modal-title"
+                    style="font-family:'Playfair Display',serif; font-size:1.1rem;">
+                    <i class="fa fa-user me-2 text-gold"></i>
+                    Chi Tiết Tài Khoản
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:1.5rem;">
+                <table class="table" style="font-size:0.85rem; margin:0;">
+                    <tr>
+                        <td class="text-muted" style="border:none; padding:6px 0; width:35%;">Họ tên</td>
+                        <td style="border:none; padding:6px 0; font-weight:500;" id="d-name"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted" style="border:none; padding:6px 0;">Email</td>
+                        <td style="border:none; padding:6px 0;" id="d-email"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted" style="border:none; padding:6px 0;">Số điện thoại</td>
+                        <td style="border:none; padding:6px 0;" id="d-phone"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted" style="border:none; padding:6px 0;">Địa chỉ</td>
+                        <td style="border:none; padding:6px 0;" id="d-address"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted" style="border:none; padding:6px 0;">Ngày tạo</td>
+                        <td style="border:none; padding:6px 0;" id="d-created"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted" style="border:none; padding:6px 0;">Vai trò</td>
+                        <td style="border:none; padding:6px 0;" id="d-role"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #f0ede8; padding:1rem 1.5rem;">
+                <button type="button" class="btn btn-admin-outline"
+                        data-bs-dismiss="modal">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Đổi Role -->
+<div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
+        <div class="modal-content" style="border-radius:0; border:none;">
+            <div class="modal-header" style="border-bottom:1px solid #f0ede8; padding:1.2rem 1.5rem;">
+                <h5 class="modal-title"
+                    style="font-family:'Playfair Display',serif; font-size:1.1rem;">
+                    <i class="fa fa-user-tag me-2 text-gold"></i>
+                    Thay Đổi Vai Trò
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-area="Admin" asp-controller="User"
+                  asp-action="ChangeRole" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body" style="padding:1.5rem;">
+                    <p class="text-muted small mb-3" id="roleModalDesc"></p>
+                    <input type="hidden" name="userId" id="roleUserId">
+
+                    <label class="small text-uppercase mb-2"
+                           style="letter-spacing:1.5px; font-size:0.7rem; color:#888;">
+                        Vai Trò Mới
+                    </label>
+                    <select name="newRole" id="newRoleSelect"
+                            class="form-select admin-form-control">
+                        @foreach (var role in (IEnumerable<string?>)ViewBag.AllRoles)
+                        {
+                            <option value="@role">@role</option>
+                        }
+                    </select>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #f0ede8; padding:1rem 1.5rem;">
+                    <button type="button" class="btn btn-admin-outline"
+                            data-bs-dismiss="modal">
+                        Hủy
+                    </button>
+                    <button type="submit" class="btn btn-admin-gold px-4">
+                        <i class="fa fa-save me-2"></i>Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-<script>
-    function searchUser() {
-        const t = $('#searchUser').val().toLowerCase();
-        $('.user-row').each(function() { $(this).toggle($(this).data('search').includes(t)); });
-    }
-</script>
+    <script>
+        function searchUser() {
+            const t = document.getElementById('searchUser').value.toLowerCase();
+            document.querySelectorAll('.user-row').forEach(row => {
+                row.style.display = row.dataset.search.includes(t) ? '' : 'none';
+            });
+        }
+
+        function showDetail(name, email, phone, address, created, role) {
+            document.getElementById('d-name').textContent = name || '—';
+            document.getElementById('d-email').textContent = email || '—';
+            document.getElementById('d-phone').textContent = phone || '—';
+            document.getElementById('d-address').textContent = address || '—';
+            document.getElementById('d-created').textContent = created || '—';
+            document.getElementById('d-role').textContent = role || '—';
+        }
+
+        function setRoleUser(userId, fullName, currentRole) {
+            document.getElementById('roleUserId').value = userId;
+            document.getElementById('roleModalDesc').textContent =
+                `Tài khoản: ${fullName} — Vai trò hiện tại: ${currentRole}`;
+
+            // Pre-select current role
+            const sel = document.getElementById('newRoleSelect');
+            for (let opt of sel.options) {
+                opt.selected = opt.value === currentRole;
+            }
+        }
+    </script>
 }
