@@ -1,0 +1,83 @@
+﻿@model GodivaShop.Web.Models.Domain.Order
+@{
+    ViewData["Title"] = "Thanh toán VietQR";
+    
+    // Nối chuỗi tạo link API VietQR động
+    var qrUrl = $"https://img.vietqr.io/image/{ViewBag.BankId}-{ViewBag.AccountNo}-compact2.png?amount={ViewBag.FinalAmount}&addInfo={ViewBag.OrderInfo}&accountName={ViewBag.AccountName}";
+}
+
+<div class="container mt-5 mb-5" style="max-width: 500px;">
+    <div class="card shadow border-0 rounded-lg">
+        <div class="card-header bg-primary text-white text-center py-3">
+            <h4 class="mb-0">Quét mã QR để thanh toán</h4>
+        </div>
+        <div class="card-body text-center p-4">
+            
+            <div class="mb-4">
+                <img id="qr-img" src="@qrUrl" alt="VietQR" class="img-fluid border p-2 rounded" style="max-width: 250px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+            </div>
+            
+            <div class="bg-light p-3 rounded mb-4 text-left" style="font-size: 1.1rem;">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Mã đơn hàng:</span>
+                    <strong>@ViewBag.OrderInfo</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Số tiền cần thanh toán:</span>
+                    <strong class="text-danger h5 mb-0">@ViewBag.FinalAmount.ToString("N0") VNĐ</strong>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <p class="text-muted mb-1">Mã QR sẽ hết hạn sau:</p>
+                <h2 id="countdown-timer" class="text-warning font-weight-bold">05:00</h2>
+            </div>
+
+            <form asp-action="ConfirmVietQRPayment" asp-controller="Cart" method="post" id="payment-form">
+                <input type="hidden" name="orderId" value="@Model.Id" />
+                <button type="submit" id="btn-success" class="btn btn-success btn-lg w-100 py-3 font-weight-bold">
+                    <i class="fas fa-check-circle mr-2"></i> TÔI ĐÃ THANH TOÁN
+                </button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let timeLeft = 300; // 5 phút
+        const timerDisplay = document.getElementById('countdown-timer');
+        const qrImg = document.getElementById('qr-img');
+        const btnSuccess = document.getElementById('btn-success');
+        const paymentForm = document.getElementById('payment-form');
+        
+        const timer = setInterval(function () {
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                timerDisplay.innerHTML = "ĐÃ HẾT HẠN";
+                timerDisplay.classList.replace('text-warning', 'text-danger');
+                qrImg.style.opacity = "0.2"; // Làm mờ QR
+                
+                // Khóa nút bấm
+                btnSuccess.disabled = true;
+                btnSuccess.classList.replace('btn-success', 'btn-secondary');
+                btnSuccess.innerHTML = "Đơn hàng đã hủy";
+                
+                // Có thể gọi AJAX về backend để update status đơn hàng thành Cancelled ở đây nếu muốn
+            } else {
+                let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                let s = (timeLeft % 60).toString().padStart(2, '0');
+                timerDisplay.innerHTML = m + ":" + s;
+                timeLeft--;
+            }
+        }, 1000);
+
+        // Hiệu ứng loading khi bấm nút tránh click 2 lần
+        paymentForm.addEventListener('submit', function() {
+            clearInterval(timer);
+            btnSuccess.disabled = true;
+            btnSuccess.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+        });
+    </script>
+}
