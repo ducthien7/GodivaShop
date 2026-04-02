@@ -149,6 +149,23 @@
                                     }
                                 </ul>
                             </div>
+
+                            <!-- Xóa đơn hàng -->
+                            <form asp-area="Admin"
+                                  asp-controller="Order"
+                                  asp-action="Delete"
+                                  method="post" style="margin:0;"
+                                  onsubmit="return confirm('Xóa đơn hàng #@order.Id của @order.GuestFullName?\nHành động này không thể hoàn tác!')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@order.Id">
+                                <button type="submit"
+                                        class="btn btn-sm"
+                                        style="border:1px solid #e74c3c; color:#e74c3c;
+                                               border-radius:0; padding:4px 8px;"
+                                        title="Xóa đơn hàng">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
@@ -160,23 +177,26 @@
 @section Scripts {
     <script>
         function filterOrders(type, btn) {
-            $('.filter-tabs .btn').removeClass('active');
-            $(btn).addClass('active');
-            $('.order-row').each(function() {
-                if (type === 'all') { $(this).show(); return; }
-                const rowType = $(this).data('type');
-                const rowStatus = $(this).data('status');
-                if (type === 'guest' && rowType === 'guest') $(this).show();
-                else if (type === 'member' && rowType === 'member') $(this).show();
-                else if (type === 'pending' && rowStatus === 'pending') $(this).show();
-                else $(this).hide();
+            document.querySelectorAll('#filterTabs button').forEach(b => {
+                b.classList.remove('btn-admin-gold', 'active-filter');
+                b.classList.add('btn-admin-outline');
+            });
+            btn.classList.add('btn-admin-gold', 'active-filter');
+            btn.classList.remove('btn-admin-outline');
+
+            document.querySelectorAll('.order-row').forEach(row => {
+                if (type === 'all') { row.style.display = ''; return; }
+                const show = (type === 'guest' && row.dataset.type === 'guest')
+                    || (type === 'member' && row.dataset.type === 'member')
+                    || (type === 'pending' && row.dataset.status === 'pending');
+                row.style.display = show ? '' : 'none';
             });
         }
 
         function searchOrders() {
-            const term = $('#searchInput').val().toLowerCase();
-            $('.order-row').each(function() {
-                $(this).toggle($(this).data('search').includes(term));
+            const t = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.order-row').forEach(row => {
+                row.style.display = row.dataset.search.includes(t) ? '' : 'none';
             });
         }
     </script>

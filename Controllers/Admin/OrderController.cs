@@ -58,4 +58,49 @@ public class OrderController : Controller
         if (order == null) return NotFound();
         return View(order);
     }
+    // Xóa đơn hàng
+    [HttpPost]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var order = await _db.Orders
+            .Include(o => o.OrderItems)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+        if (order == null) return NotFound();
+
+        _db.OrderItems.RemoveRange(order.OrderItems);
+        _db.Orders.Remove(order);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = $"Đã xóa đơn hàng #{id} thành công";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // Cập nhật trạng thái (sửa lại để nhận int thay vì enum trực tiếp)
+    [HttpPost]
+    public async Task<IActionResult> UpdateStatus(int id, int status)
+    {
+        var order = await _db.Orders.FindAsync(id);
+        if (order == null) return NotFound();
+
+        order.Status = (OrderStatus)status;
+        await _db.SaveChangesAsync();
+
+        // Gửi email thông báo
+        var statusText = order.Status switch
+        {
+            OrderStatus.Pending => "Chờ xử lý",
+            OrderStatus.Confirmed => "Đã xác nhận",
+            OrderStatus.Processing => "Đang xử lý",
+            OrderStatus.Shipped => "Đang giao hàng",
+            OrderStatus.Delivered => "Đã giao",
+            OrderStatus.Cancelled => "Đã hủy",
+            _ => order.Status.ToString()
+        };
+        await _emailService.SendOrderStatusUpdateAsync(
+            order.GuestEmail, order.GuestFullName, order.Id, statusText);
+
+        TempData["Success"] = $"Đã cập nhật trạng thái đơn #{id} thành '{statusText}'";
+        return RedirectToAction(nameof(Index));
+    }
 }

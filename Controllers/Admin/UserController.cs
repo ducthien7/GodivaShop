@@ -43,4 +43,29 @@ public class UserController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+
+    // Xóa tài khoản
+    [HttpPost]
+    public async Task<IActionResult> Delete(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return NotFound();
+
+        // Không cho xóa Admin
+        var roles = await _userManager.GetRolesAsync(user);
+        if (roles.Contains("Admin"))
+        {
+            TempData["Error"] = "Không thể xóa tài khoản Admin!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _userManager.DeleteAsync(user);
+        if (result.Succeeded)
+            TempData["Success"] = $"Đã xóa tài khoản '{user.FullName}' thành công";
+        else
+            TempData["Error"] = "Xóa tài khoản thất bại: "
+                              + string.Join(", ", result.Errors.Select(e => e.Description));
+
+        return RedirectToAction(nameof(Index));
+    }
 }
