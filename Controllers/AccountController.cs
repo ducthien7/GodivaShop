@@ -1,8 +1,7 @@
 ﻿using GodivaShop.Web.Models.Domain;
+using GodivaShop.Web.Services; // Thêm dòng này để gọi EmailService
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using System.Net.Mail;
 using System.Threading.Tasks;
 
 namespace GodivaShop.Web.Controllers
@@ -10,38 +9,15 @@ namespace GodivaShop.Web.Controllers
     public class AccountController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly EmailService _emailService; // Khai báo EmailService
 
-        public AccountController(UserManager<ApplicationUser> userManager)
+        public AccountController(UserManager<ApplicationUser> userManager, EmailService emailService)
         {
             _userManager = userManager;
+            _emailService = emailService; // Tiêm (Inject) Service vào
         }
 
-        // --- BỘ MÁY GỬI MAIL DÙNG CHUNG ---
-        private async Task SendEmailAsync(string toEmail, string subject, string body)
-        {
-            // BẠN NHỚ THAY EMAIL VÀ MẬT KHẨU ỨNG DỤNG 16 CHỮ CÁI VÀO ĐÂY NHÉ
-            string fromEmail = "kietqq123@gmail.com";
-            string fromPassword = "pdlp nupk mxgd gomn";
-            
-            var smtp = new SmtpClient
-            {
-                Host = "smtp.gmail.com",
-                Port = 587,
-                EnableSsl = true,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(fromEmail, fromPassword)
-            };
-
-            using var message = new MailMessage(new MailAddress(fromEmail, "Godiva Shop"), new MailAddress(toEmail))
-            {
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            };
-
-            await smtp.SendMailAsync(message);
-        }
+        // ĐÃ XÓA HÀM SendEmailAsync() PRIVATE ĐỂ DÙNG CHUNG SERVICE
 
         // 1. HIỂN THỊ TRANG NHẬP EMAIL QUÊN MẬT KHẨU
         [HttpGet]
@@ -79,10 +55,10 @@ namespace GodivaShop.Web.Controllers
                         <p style='margin-top: 20px; font-size: 12px; color: #888;'>Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.</p>
                     </div>";
 
-                await SendEmailAsync(email, "Khôi phục mật khẩu - Godiva Shop", mailBody);
+                // Gọi EmailService dùng chung để gửi mail
+                await _emailService.SendEmailAsync(email, "Khôi phục mật khẩu - Godiva Shop", mailBody);
             }
 
-            // Dù có tài khoản hay không cũng báo thành công để chống hacker dò email
             ViewBag.Message = "Nếu Email này tồn tại trong hệ thống, một liên kết khôi phục đã được gửi đi. Vui lòng kiểm tra hộp thư của bạn (bao gồm cả thư rác).";
             return View();
         }
@@ -139,7 +115,8 @@ namespace GodivaShop.Web.Controllers
                     <a href='https://localhost:7105/' style='display: inline-block; padding:10px 20px; background:#C1A35E; color:#fff; text-decoration:none; margin-top:15px;'>MUA SẮM NGAY</a>
                 </div>";
 
-            await SendEmailAsync(email, "Chào mừng thành viên mới - Godiva Shop", body);
+            // Gọi EmailService dùng chung để gửi mail
+            await _emailService.SendEmailAsync(email, "Chào mừng thành viên mới - Godiva Shop", body);
         }
     }
 }

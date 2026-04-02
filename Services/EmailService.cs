@@ -12,6 +12,47 @@ public class EmailService
         _config = config;
     }
 
+    // ========================================================
+    // 1. HÀM GỬI MÁY CHUNG (Dùng cho Welcome, Confirm, v.v...)
+    // ========================================================
+    public async Task SendEmailAsync(string toEmail, string subject, string htmlMessage)
+    {
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress("Godiva Shop", _config["Email:From"]));
+
+        // Vì hàm chung có thể không có tên người nhận, mình dùng tạm email làm tên hiển thị
+        message.To.Add(new MailboxAddress("", toEmail));
+
+        message.Subject = subject;
+
+        message.Body = new TextPart("html")
+        {
+            Text = htmlMessage
+        };
+
+        using var client = new SmtpClient();
+
+        try
+        {
+            // Bắt chước y hệt cấu hình kết nối từ các hàm cũ của bạn
+            await client.ConnectAsync(_config["Email:Host"], int.Parse(_config["Email:Port"]!), false);
+            await client.AuthenticateAsync(_config["Email:Username"], _config["Email:Password"]);
+            await client.SendAsync(message);
+        }
+        catch (Exception ex)
+        {
+            // Bắt lỗi ra console để app không bị sập nếu sai mật khẩu mail
+            Console.WriteLine($"[Lỗi gửi mail tới {toEmail}]: " + ex.Message);
+        }
+        finally
+        {
+            await client.DisconnectAsync(true);
+        }
+    }
+
+    // ========================================================
+    // 2. CÁC HÀM CŨ CỦA BẠN (Được giữ nguyên)
+    // ========================================================
     public async Task SendOrderConfirmationAsync(string toEmail, string toName, int orderId, decimal total)
     {
         var message = new MimeMessage();
