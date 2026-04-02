@@ -1,0 +1,42 @@
+﻿@model GodivaShop.Web.Models.Domain.ApplicationUser
+@{
+    ViewData["Title"] = "Cập nhật thông tin";
+}
+
+<div class="container py-5" style="margin-top: 2rem; margin-bottom: 5rem;">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0" style="border-radius: 0;">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fa fa-user-edit fa-2x text-gold mb-3" style="color: #C1A35E;"></i>
+                        <h3 class="serif">Cập Nhật Thông Tin</h3>
+                        <p class="text-muted small">Vui lòng điền thông tin chính xác để Godiva giao hàng đến bạn thuận tiện nhất.</p>
+                    </div>
+
+                    <form asp-action="Edit" method="post">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold" style="letter-spacing: 1px;">HỌ VÀ TÊN</label>
+                            <input asp-for="FullName" class="form-control px-3 py-2" style="border-radius: 0; border: 1px solid #ddd;" placeholder="VD: Nguyễn Văn A" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold" style="letter-spacing: 1px;">SỐ ĐIỆN THOẠI</label>
+                            <input asp-for="PhoneNumber" class="form-control px-3 py-2" style="border-radius: 0; border: 1px solid #ddd;" placeholder="VD: 0901234567" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold" style="letter-spacing: 1px;">ĐỊA CHỈ GIAO HÀNG</label>
+                            <textarea asp-for="Address" class="form-control px-3 py-2" rows="3" style="border-radius: 0; border: 1px solid #ddd;" placeholder="Số nhà, Tên đường, Phường/Xã, Quận/Huyện..."></textarea>
+                        </div>
+
+                        <div class="d-flex gap-3 mt-4">
+                            <a asp-action="Index" class="btn btn-outline-dark w-50 py-2" style="border-radius: 0; letter-spacing: 1px; font-size: 0.85rem;">HỦY BỎ</a>
+                            <button type="submit" class="btn btn-dark w-50 py-2" style="border-radius: 0; letter-spacing: 1px; font-size: 0.85rem;">LƯU THAY ĐỔI</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

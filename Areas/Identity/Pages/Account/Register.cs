@@ -81,6 +81,8 @@ public class RegisterModel : PageModel
         foreach (var error in result.Errors)
             ModelState.AddModelError(string.Empty, error.Description);
 
+        
+
         return Page();
     }
 }

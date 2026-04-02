@@ -1,0 +1,154 @@
+﻿@model GodivaShop.Web.Models.Domain.Order
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.Id;
+}
+
+<div class="container py-5" style="margin-top: 2rem; margin-bottom: 5rem;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0" style="border-radius: 0;">
+                <div class="card-header bg-dark text-white p-4" style="border-radius: 0;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="serif mb-0" style="letter-spacing: 1px;">ĐƠN HÀNG #@Model.Id</h5>
+                        <span class="badge bg-gold" style="background-color: #C1A35E; letter-spacing: 1px; font-weight: normal; padding: 6px 12px;">
+                            @Model.Status.ToString()
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body p-5">
+                    <div class="row mb-5">
+                        <div class="col-sm-6">
+                            <h6 class="text-muted small fw-bold mb-3" style="letter-spacing: 1px;">THÔNG TIN NGƯỜI NHẬN</h6>
+                            <p class="mb-1"><strong>@(string.IsNullOrEmpty(Model.GuestFullName) ? Model.User?.FullName : Model.GuestFullName)</strong></p>
+                            <p class="mb-1"><i class="fa fa-phone text-muted me-2"></i> @(string.IsNullOrEmpty(Model.GuestPhone) ? Model.User?.PhoneNumber : Model.GuestPhone)</p>
+                            <p class="mb-1"><i class="fa fa-map-marker-alt text-muted me-2"></i> @(string.IsNullOrEmpty(Model.ShippingAddress) ? Model.User?.Address : Model.ShippingAddress)</p>
+                        </div>
+                        <div class="col-sm-6 text-sm-end mt-4 mt-sm-0">
+                            <h6 class="text-muted small fw-bold mb-3" style="letter-spacing: 1px;">CHI TIẾT THANH TOÁN</h6>
+                            <p class="mb-1">Ngày đặt: <strong>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</strong></p>
+                            <p class="mb-1">Phương thức: <strong>@Model.PaymentMethod</strong></p>
+                            <p class="mb-1">
+                                Trạng thái:
+                                @if (Model.IsPaid)
+                                {
+                                    <span class="text-success"><i class="fa fa-check-circle me-1"></i>Đã thanh toán</span>
+                                }
+                                else
+                                {
+
+                                    <span class="text-danger"><i class="fa fa-clock me-1"></i>Chưa thanh toán</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <h6 class="text-muted small fw-bold mb-3" style="letter-spacing: 1px;">DANH SÁCH SẢN PHẨM</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table align-middle border-top border-bottom">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-uppercase small text-muted">Sản phẩm</th>
+                                    <th class="text-uppercase small text-muted text-center">SL</th>
+                                    <th class="text-uppercase small text-muted text-end">Giá</th>
+                                    <th class="text-uppercase small text-muted text-end">Tổng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderItems)
+                                {
+                                    <tr>
+                                        <td>
+                                            <p class="mb-0 fw-bold" style="font-size: 0.9rem;">@(item.Product?.Name ?? "Sản phẩm không xác định")</p>
+                                        </td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">@item.UnitPrice.ToString("N0")đ</td>
+                                        <td class="text-end fw-bold" style="color: #C1A35E;">@((item.Quantity * item.UnitPrice).ToString("N0"))đ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row justify-content-end">
+                        <div class="col-sm-6 col-md-5">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Tạm tính:</span>
+                                <span>@((Model.TotalAmount + Model.DiscountAmount).ToString("N0"))đ</span>
+                            </div>
+                            @if (Model.DiscountAmount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-danger">Giảm giá (@Model.CouponCode):</span>
+                                    <span class="text-danger">-@Model.DiscountAmount.ToString("N0")đ</span>
+                                </div>
+                            }
+                            <hr>
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong>TỔNG CỘNG:</strong>
+                                <strong style="color: #C1A35E; font-size: 1.2rem;">@Model.TotalAmount.ToString("N0")đ</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.Status == GodivaShop.Web.Models.Domain.OrderStatus.Pending)
+                    {
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-outline-danger px-4" data-bs-toggle="modal" data-bs-target="#cancelModal" style="border-radius:0; letter-spacing:1px; font-size:0.8rem;">
+                                HỦY ĐƠN HÀNG
+                            </button>
+                        </div>
+                    }
+
+                    <div class="modal fade" id="cancelModal" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content" style="border-radius: 0;">
+                                <form asp-action="CancelOrder" method="post">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <div class="modal-header border-0">
+                                        <h5 class="serif">Lý do hủy đơn hàng</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="small text-muted">Vui lòng cho Godiva biết lý do bạn muốn hủy đơn hàng này:</p>
+                    
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="cancellationReason" value="Thay đổi ý định mua hàng" checked>
+                                            <label class="form-check-label small">Thay đổi ý định mua hàng</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="cancellationReason" value="Tìm thấy nơi khác giá tốt hơn">
+                                            <label class="form-check-label small">Tìm thấy nơi khác giá tốt hơn</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="cancellationReason" value="Áp dụng nhầm mã giảm giá">
+                                            <label class="form-check-label small">Áp dụng nhầm mã giảm giá</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="cancellationReason" value="Thời gian giao hàng quá lâu">
+                                            <label class="form-check-label small">Thời gian giao hàng quá lâu</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="cancellationReason" value="Lý do khác">
+                                            <label class="form-check-label small">Lý do khác</label>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0">
+                                        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">ĐÓNG</button>
+                                        <button type="submit" class="btn btn-danger btn-sm">XÁC NHẬN HỦY</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5">
+                        <a asp-action="Index" class="btn btn-outline-dark px-4 py-2" style="border-radius: 0; letter-spacing: 1px; font-size: 0.85rem;">
+                            <i class="fa fa-arrow-left me-2"></i>QUAY LẠI HỒ SƠ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -378,6 +378,14 @@
                                         @User.Identity?.Name
                                     </span>
                                 </li>
+
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Profile" asp-action="Index" style="font-size: 0.85rem; padding: 10px 20px;">
+                                        <i class="fa fa-id-badge me-2 text-muted"></i> Hồ sơ của tôi
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+
                                 <li>
                                     <form action="/Identity/Account/Logout" method="post">
                                         @Html.AntiForgeryToken()

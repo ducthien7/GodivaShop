@@ -34,6 +34,6 @@ public class Order
     public string PaymentMethod { get; set; } = "COD"; // "COD" hoặc "VNPAY"
     public bool IsPaid { get; set; } = false;         // Đã thanh toán hay chưa
     public string? PaymentTransactionId { get; set; } // Mã giao dịch từ VNPay trả về (để đối soát sau này)
-
+    public string? CancellationReason { get; set; }
     public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }
