@@ -399,16 +399,20 @@
 
                     <!-- Cart -->
                     <a asp-area=""
-                       asp-controller="Cart"
-                       asp-action="Index"
-                       class="nav-icon position-relative">
+                           asp-controller="Cart"
+                           asp-action="Index"
+                           class="nav-icon position-relative">
                         <i class="fa fa-shopping-bag"></i>
                         @{
                             var cartCount = ViewBag.CartCount as int? ?? 0;
                         }
                         @if (cartCount > 0)
                         {
-                            <span class="cart-count">@cartCount</span>
+                            <span class="cart-count" id="cartBadge">@cartCount</span>
+                        }
+                        else
+                        {
+                            <span class="cart-count" id="cartBadge" style="display:none;">0</span>
                         }
                     </a>
 

@@ -79,13 +79,17 @@ public class ProductController : Controller
     public async Task<IActionResult> Detail(int id)
     {
         ViewBag.CartCount = _cart.GetCartCount();
+
         var product = await _db.Products
-            .Include(p => p.Images)
-            .Include(p => p.Variants)
+            .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
+            .Include(p => p.Variants
+                .Where(v => v.IsActive)          // ← chỉ lấy variant đang bật
+                .OrderBy(v => v.Price))          // ← sắp xếp theo giá tăng dần
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
 
         if (product == null) return NotFound();
+
         return View(product);
     }
 

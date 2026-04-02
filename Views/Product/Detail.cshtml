@@ -47,22 +47,39 @@
                 @Model.BasePrice.ToString("N0") VNĐ
             </div>
 
-            <!-- BIẾN THỂ (Size) -->
-            @if (Model.Variants.Any())
+            <!-- BIẾN THỂ -->
+@if (Model.Variants != null && Model.Variants.Any())
+{
+    <div class="mb-4">
+        <p class="small text-uppercase mb-2"
+           style="letter-spacing:2px; font-weight:600; font-size:0.72rem;">
+            Chọn số lượng:
+        </p>
+        <div class="d-flex gap-2 flex-wrap" id="variantGroup">
+            @foreach (var variant in Model.Variants)
             {
-                <div class="mb-4">
-                    <p class="small text-uppercase" style="letter-spacing:2px; font-weight:600;">Chọn số lượng:</p>
-                    <div class="d-flex gap-2 flex-wrap" id="variantGroup">
-                        @foreach (var variant in Model.Variants.Where(v => v.IsActive))
-                        {
-                            <button class="variant-btn" data-variant-id="@variant.Id"
-                                    onclick="selectVariant(this, @variant.Id)">
-                                @variant.Name
-                            </button>
-                        }
-                    </div>
-                </div>
+                <button class="variant-btn"
+                        data-variant-id="@variant.Id"
+                        data-price="@variant.Price"
+                        data-name="@variant.Name"
+                        onclick="selectVariant(this, @variant.Id, @variant.Price)">
+                    @variant.Name
+                </button>
             }
+        </div>
+        <p class="text-muted mt-1 mb-0"
+           style="font-size:0.72rem;">
+            * Chọn biến thể để cập nhật giá
+        </p>
+    </div>
+}
+else
+{
+    <!-- Không có biến thể: hiển thị giá gốc bình thường -->
+    <div class="mb-4">
+        <p class="text-muted small">Sản phẩm không có biến thể</p>
+    </div>
+}
 
             <!-- CHỌN SỐ LƯỢNG -->
             <div class="mb-4">
@@ -124,141 +141,108 @@
 </div>
 
 @section Scripts {
-    <script>
-        let selectedVariantId = null;
+<script>
+    let selectedVariantId = null;
 
-        // Đổi ảnh chính - jQuery
-        function changeMainImage(thumb, src) {
-            $('.thumbnail').removeClass('active');
-            $(thumb).addClass('active');
-            $('#mainImage').fadeOut(150, function() {
-                $(this).attr('src', src).fadeIn(200);
-            });
-        }
+    // ===== ĐỔI ẢNH CHÍNH =====
+    function changeMainImage(thumb, src) {
+        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+        const mainImg = document.getElementById('mainImage');
+        mainImg.style.opacity = '0';
+        setTimeout(() => {
+            mainImg.src = src;
+            mainImg.style.opacity = '1';
+            mainImg.style.transition = 'opacity 0.2s';
+        }, 150);
+    }
 
-        // Chọn biến thể - AJAX lấy giá mới
-        function selectVariant(btn, variantId) {
-            selectedVariantId = variantId;
-            $('.variant-btn').removeClass('active');
-            $(btn).addClass('active');
+    // ===== CHỌN BIẾN THỂ =====
+    function selectVariant(btn, variantId, price) {
+        selectedVariantId = variantId;
+        document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
 
-            $.get('/Product/GetVariantPrice', { variantId: variantId }, function(data) {
-                $('#priceDisplay').fadeTo(150, 0, function() {
-                    $(this).text(new Intl.NumberFormat('vi-VN').format(data.price) + ' VNĐ')
-                           .fadeTo(200, 1);
-                });
-            });
-        }
+        const priceEl = document.getElementById('priceDisplay');
+        priceEl.style.opacity = '0';
+        setTimeout(() => {
+            priceEl.textContent = parseFloat(price).toLocaleString('vi-VN') + ' VNĐ';
+            priceEl.style.opacity = '1';
+            priceEl.style.transition = 'opacity 0.2s';
+        }, 150);
+    }
 
-        // Thêm vào giỏ - AJAX
-        function addToCart(productId) {
-            // Lấy giá từ text, bỏ ký tự không phải số
-            const priceText = document.getElementById('priceDisplay').innerText;
-            const price = parseFloat(priceText.replace(/[^0-9]/g, ''));
+    // ===== TĂNG GIẢM SỐ LƯỢNG ← 2 HÀM CÒN THIẾU =====
+    function changeProductQty(delta) {
+        const input = document.getElementById('productQty');
+        let val = parseInt(input.value) + delta;
+        if (val < 1) val = 1;
+        if (val > 99) val = 99;
+        input.value = val;
+    }
 
-            // Lấy ảnh từ mainImage
-            let productImage = document.getElementById('mainImage').src;
-            if (!productImage || productImage.includes('undefined')) {
-                productImage = '@Url.Content(Model.Images.FirstOrDefault()?.ImagePath ?? "~/images/no-image.jpg")';
+    function validateProductQty() {
+        const input = document.getElementById('productQty');
+        let val = parseInt(input.value);
+        if (isNaN(val) || val < 1) input.value = 1;
+        else if (val > 99) input.value = 99;
+        else input.value = val;
+    }
+
+    // ===== THÊM VÀO GIỎ =====
+    function addToCart(productId) {
+        const priceText = document.getElementById('priceDisplay').textContent;
+        const price     = parseFloat(priceText.replace(/[^0-9]/g, ''));
+        const qty       = parseInt(document.getElementById('productQty').value) || 1; // ← sửa từ 1 thành đọc input
+        const activeBtn = document.querySelector('.variant-btn.active');
+
+        const data = {
+            productId:    productId,
+            variantId:    selectedVariantId,
+            variantName:  activeBtn ? activeBtn.dataset.name : null,
+            quantity:     qty,
+            unitPrice:    price,
+            productName:  '@Html.Raw(Model.Name.Replace("'", "\\'"))',
+            productImage: document.getElementById('mainImage').src,
+            giftMessage:  document.getElementById('giftMessage').value
+        };
+
+        fetch('/Product/AddToCart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                // Cập nhật badge
+                const badge = document.getElementById('cartBadge')
+                           ?? document.querySelector('.cart-count');
+                if (badge) {
+                    badge.textContent = res.cartCount;
+                    badge.style.display = res.cartCount > 0 ? 'flex' : 'none';
+                }
+                showToast('✓ Đã thêm ' + qty + ' sản phẩm vào giỏ!');
             }
+        })
+        .catch(err => console.error('AddToCart error:', err));
+    }
 
-            // Lấy số lượng từ input
-            const quantity = parseInt(document.getElementById('productQty').value) || 1;
+    // ===== TOAST =====
+    function showToast(msg) {
+        const old = document.querySelector('.toast-godiva');
+        if (old) old.remove();
 
-            const data = {
-                productId: productId,
-                variantId: selectedVariantId || null,
-                variantName: selectedVariantId
-                    ? document.querySelector('.variant-btn.active')?.innerText.trim()
-                    : null,
-                quantity: quantity,
-                unitPrice: price,
-                productName: '@Html.Raw(Model.Name.Replace("'", "\\'"))',
-                productImage: productImage,
-                giftMessage: document.getElementById('giftMessage').value || ""
-            };
-
-            fetch('/Product/AddToCart', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success) {
-                        // ✅ Cập nhật tất cả cart-count badge trên trang
-                        const badges = document.querySelectorAll('.cart-count');
-                        if (res.cartCount > 0) {
-                            if (badges.length > 0) {
-                                badges.forEach(b => {
-                                    b.textContent = res.cartCount;
-                                    b.style.display = 'flex';
-                                });
-                            } else {
-                                // Tạo badge mới nếu chưa có
-                                const cartIcon = document.querySelector('a[href*="Cart"] .fa-shopping-bag')
-                                    ?? document.querySelector('.nav-icon .fa-shopping-bag');
-                                if (cartIcon) {
-                                    const badge = document.createElement('span');
-                                    badge.className = 'cart-count';
-                                    badge.textContent = res.cartCount;
-                                    cartIcon.parentElement.appendChild(badge);
-                                }
-                            }
-                        }
-
-                        // Reset quantity để chuẩn bị lần thêm tiếp theo
-                        document.getElementById('productQty').value = 1;
-
-                        // Toast thông báo
-                        showToast('✓ Đã thêm vào giỏ hàng!');
-                    } else {
-                        showToast('❌ Lỗi khi thêm vào giỏ hàng!');
-                    }
-                })
-                .catch(err => {
-                    console.error('AddToCart error:', err);
-                    showToast('❌ Lỗi khi thêm vào giỏ hàng!');
-                });
-        }
-
-        // Thay đổi số lượng trong product detail
-        function changeProductQty(delta) {
-            const input = document.getElementById('productQty');
-            const newValue = Math.max(1, parseInt(input.value) + delta);
-            input.value = newValue;
-        }
-
-        // Kiểm tra giá trị số lượng hợp lệ
-        function validateProductQty() {
-            const input = document.getElementById('productQty');
-            const value = parseInt(input.value);
-            if (isNaN(value) || value < 1) {
-                input.value = 1;
-            }
-        }
-
-        function showToast(msg) {
-            const toast = document.createElement('div');
-            const isError = msg.includes('❌');
-            toast.style.cssText = `
-                position:fixed; bottom:24px; right:24px; z-index:9999;
-                background:${isError ? '#e74c3c' : '#1a1a1a'}; 
-                color:#fff; padding:14px 20px;
-                border-left:4px solid ${isError ? '#c0392b' : 'var(--gold)'}; 
-                font-size:0.9rem; font-weight:500;
-                box-shadow:0 4px 15px rgba(0,0,0,0.3);
-                animation: slideUp 0.3s ease;
-                border-radius: 2px;
-            `;
-            toast.innerHTML = msg;
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(() => toast.remove(), 300);
-            }, 2500);
-        }
-    </script>
+        const t = document.createElement('div');
+        t.className = 'toast-godiva';
+        t.style.cssText = `position:fixed; bottom:24px; right:24px; z-index:9999;
+            background:#1a1a1a; color:#fff; padding:12px 20px;
+            border-left:3px solid #C1A35E; font-size:0.85rem;
+            box-shadow:0 4px 15px rgba(0,0,0,0.2); transition:opacity 0.3s;`;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; }, 2200);
+        setTimeout(() => t.remove(), 2500);
+    }
+</script>
 }

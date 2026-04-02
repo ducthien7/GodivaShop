@@ -1,63 +1,534 @@
-﻿@{
-    ViewData["Title"] = "Admin Dashboard";
+﻿@using GodivaShop.Web.Models.Domain
+@{
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="row g-4 mb-4">
+@section Styles {
+    <style>
+        .stat-card {
+            background: #fff;
+            border-radius: 0;
+            padding: 1.5rem;
+            border-left: 3px solid var(--gold);
+            height: 100%;
+        }
+        .stat-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--gold);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #999;
+        }
+        .stat-icon {
+            font-size: 1.8rem;
+            color: #e8dfc8;
+        }
+        .chart-card {
+            background: #fff;
+            padding: 1.5rem;
+            height: 100%;
+        }
+        .chart-title {
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 1rem;
+        }
+        .live-item {
+            padding: 10px 12px;
+            border-left: 3px solid var(--gold);
+            background: #faf8f5;
+            margin-bottom: 8px;
+            animation: slideIn 0.4s ease;
+        }
+        @@keyframes slideIn {
+            from { opacity:0; transform:translateX(-12px); }
+            to   { opacity:1; transform:translateX(0); }
+        }
+        .order-row td { font-size: 0.82rem; padding: 0.75rem 1rem; border-color: #f0ede8; vertical-align: middle; }
+        .order-row:hover td { background: #faf8f5; }
+        .badge-pending    { background:#fff3cd; color:#856404; }
+        .badge-confirmed  { background:#cce5ff; color:#004085; }
+        .badge-processing { background:#e2d9f3; color:#432874; }
+        .badge-shipped    { background:#d4edda; color:#155724; }
+        .badge-delivered  { background:#d1ecf1; color:#0c5460; }
+        .badge-cancelled  { background:#f8d7da; color:#721c24; }
+        .badge-status {
+            font-size: 0.65rem; letter-spacing: 1px;
+            padding: 3px 8px; border-radius: 20px;
+            text-transform: uppercase; font-weight: 400;
+        }
+    </style>
+}
+
+<!-- ===== STAT CARDS ===== -->
+<div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h3 class="text-gold serif">@ViewBag.TotalOrders</h3>
-                <p class="text-muted small mb-0">Tổng Đơn Hàng</p>
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-num">@ViewBag.TotalOrders</div>
+                    <div class="stat-label">Tổng Đơn Hàng</div>
+                </div>
+                <i class="fa fa-shopping-bag stat-icon"></i>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h3 class="text-gold serif">@(((decimal)ViewBag.TotalRevenue).ToString("N0"))đ</h3>
-                <p class="text-muted small mb-0">Tổng Doanh Thu</p>
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-num" style="font-size:1.5rem;">
+                        @(((decimal)ViewBag.TotalRevenue).ToString("N0"))đ
+                    </div>
+                    <div class="stat-label">Tổng Doanh Thu</div>
+                </div>
+                <i class="fa fa-coins stat-icon"></i>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h3 class="text-gold serif">@ViewBag.GuestOrders</h3>
-                <p class="text-muted small mb-0">Khách Vãng Lai</p>
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-num">@ViewBag.TotalProducts</div>
+                    <div class="stat-label">Sản Phẩm Đang Bán</div>
+                </div>
+                <i class="fa fa-box stat-icon"></i>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h3 class="text-gold serif">@ViewBag.MemberOrders</h3>
-                <p class="text-muted small mb-0">Khách Thành Viên</p>
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-num">@ViewBag.GuestOrders</div>
+                    <div class="stat-label">Khách Vãng Lai</div>
+                    <div class="stat-label mt-1">
+                        <span style="color:var(--gold);">@ViewBag.MemberOrders</span> thành viên
+                    </div>
+                </div>
+                <i class="fa fa-users stat-icon"></i>
             </div>
         </div>
     </div>
 </div>
 
-<!-- SignalR: Nhận thông báo đơn hàng mới -->
-<div id="orderNotifications"></div>
+<!-- ===== CHARTS ROW 1 ===== -->
+<div class="row g-3 mb-4">
+    <!-- Biểu đồ doanh thu 6 tháng -->
+    <div class="col-md-8">
+        <div class="chart-card">
+            <p class="chart-title">
+                <i class="fa fa-chart-line me-2 text-gold"></i>
+                Doanh Thu 6 Tháng Gần Nhất
+            </p>
+            <canvas id="revenueChart" height="120"></canvas>
+        </div>
+    </div>
+    <!-- Biểu đồ donut loại khách -->
+    <div class="col-md-4">
+        <div class="chart-card">
+            <p class="chart-title">
+                <i class="fa fa-users me-2 text-gold"></i>
+                Phân Loại Khách Hàng
+            </p>
+            <canvas id="customerChart" height="160"></canvas>
+            <div class="d-flex justify-content-center gap-4 mt-3">
+                <div class="text-center">
+                    <div style="font-size:1.2rem; font-family:'Playfair Display',serif; color:var(--gold);">
+                        @ViewBag.GuestOrders
+                    </div>
+                    <div style="font-size:0.65rem; letter-spacing:1px; color:#999; text-transform:uppercase;">
+                        Vãng Lai
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div style="font-size:1.2rem; font-family:'Playfair Display',serif; color:#1a1a1a;">
+                        @ViewBag.MemberOrders
+                    </div>
+                    <div style="font-size:0.65rem; letter-spacing:1px; color:#999; text-transform:uppercase;">
+                        Thành Viên
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CHARTS ROW 2 ===== -->
+<div class="row g-3 mb-4">
+    <!-- Biểu đồ đơn hàng theo tháng -->
+    <div class="col-md-6">
+        <div class="chart-card">
+            <p class="chart-title">
+                <i class="fa fa-chart-bar me-2 text-gold"></i>
+                Số Đơn Hàng 6 Tháng
+            </p>
+            <canvas id="ordersChart" height="140"></canvas>
+        </div>
+    </div>
+    <!-- Biểu đồ trạng thái đơn -->
+    <div class="col-md-6">
+        <div class="chart-card">
+            <p class="chart-title">
+                <i class="fa fa-list me-2 text-gold"></i>
+                Phân Bổ Trạng Thái Đơn Hàng
+            </p>
+            <canvas id="statusChart" height="140"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ===== THÔNG BÁO REAL-TIME + ĐƠN GẦN ĐÂY ===== -->
+<div class="row g-3">
+    <!-- Live orders -->
+    <div class="col-md-4">
+        <div class="chart-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <p class="chart-title mb-0">
+                    <i class="fa fa-circle text-success me-1"
+                       style="font-size:0.5rem; vertical-align:middle;"></i>
+                    Đơn Hàng Real-time
+                </p>
+                <button onclick="document.getElementById('liveOrders').innerHTML=''"
+                        class="btn btn-sm btn-admin-outline"
+                        style="font-size:0.7rem; padding:2px 10px;">
+                    Xóa
+                </button>
+            </div>
+            <div id="liveOrders">
+                <p class="text-muted small text-center py-4 mb-0">
+                    <i class="fa fa-satellite-dish fa-2x mb-2 d-block" style="color:#e0d5c5;"></i>
+                    Đang lắng nghe đơn hàng mới...
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent orders table -->
+    <div class="col-md-8">
+        <div class="chart-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <p class="chart-title mb-0">
+                    <i class="fa fa-clock me-2 text-gold"></i>
+                    Đơn Hàng Gần Đây
+                </p>
+                <a asp-area="Admin" asp-controller="Order" asp-action="Index"
+                       class="text-gold small text-decoration-none"
+                       style="font-size:0.75rem;">
+                    Xem tất cả →
+                </a>
+            </div>
+            <table class="table mb-0" style="font-size:0.82rem;">
+                <thead>
+                    <tr style="border-bottom:2px solid #f0ede8;">
+                        <th style="font-weight:500; color:#999; font-size:0.68rem; letter-spacing:1px; text-transform:uppercase; padding:0 1rem 0.75rem; border:none;">
+                            #ID
+                        </th>
+                        <th style="font-weight:500; color:#999; font-size:0.68rem; letter-spacing:1px; text-transform:uppercase; padding:0 1rem 0.75rem; border:none;">
+                            Khách Hàng
+                        </th>
+                        <th style="font-weight:500; color:#999; font-size:0.68rem; letter-spacing:1px; text-transform:uppercase; padding:0 1rem 0.75rem; border:none;">
+                            Loại
+                        </th>
+                        <th style="font-weight:500; color:#999; font-size:0.68rem; letter-spacing:1px; text-transform:uppercase; padding:0 1rem 0.75rem; border:none;">
+                            Tổng Tiền
+                        </th>
+                        <th style="font-weight:500; color:#999; font-size:0.68rem; letter-spacing:1px; text-transform:uppercase; padding:0 1rem 0.75rem; border:none;">
+                            Trạng Thái
+                        </th>
+                        <th style="font-weight:500; color:#999; font-size:0.68rem; letter-spacing:1px; text-transform:uppercase; padding:0 1rem 0.75rem; border:none;">
+                            Ngày
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.RecentOrders != null)
+                    {
+                        @foreach (var order in (IEnumerable<GodivaShop.Web.Models.Domain.Order>)ViewBag.RecentOrders)
+                        {
+                            <tr class="order-row">
+                                <td class="text-gold fw-semibold"
+                                    style="border-top:1px solid #f0ede8;">
+                                    <a asp-area="Admin"
+                                           asp-controller="Order"
+                                           asp-action="Detail"
+                                           asp-route-id="@order.Id"
+                                           class="text-gold text-decoration-none">
+                                        #@order.Id
+                                    </a>
+                                </td>
+                                <td style="border-top:1px solid #f0ede8;">
+                                    <div class="fw-semibold" style="font-size:0.82rem;">
+                                        @order.GuestFullName
+                                    </div>
+                                    <div class="text-muted" style="font-size:0.72rem;">
+                                        @order.GuestEmail
+                                    </div>
+                                </td>
+                                <td style="border-top:1px solid #f0ede8;">
+                                    @if (order.UserId == null)
+                                    {
+                                        <span class="badge"
+                                              style="background:#f0ebe0; color:#C1A35E;
+                                            font-size:0.62rem; font-weight:400;">
+                                            Vãng Lai
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge"
+                                              style="background:#e8f0e8; color:#2d6a2d;
+                                            font-size:0.62rem; font-weight:400;">
+                                            Thành Viên
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-gold fw-semibold"
+                                    style="border-top:1px solid #f0ede8;">
+                                    @((order.TotalAmount - order.DiscountAmount).ToString("N0"))đ
+                                </td>
+                                <td style="border-top:1px solid #f0ede8;">
+                                    @{
+                                        var badgeClass = order.Status switch
+                                        {
+                                            OrderStatus.Pending => "badge-pending",
+                                            OrderStatus.Confirmed => "badge-confirmed",
+                                            OrderStatus.Processing => "badge-processing",
+                                            OrderStatus.Shipped => "badge-shipped",
+                                            OrderStatus.Delivered => "badge-delivered",
+                                            OrderStatus.Cancelled => "badge-cancelled",
+                                            _ => "badge-pending"
+                                        };
+                                        var statusText = order.Status switch
+                                        {
+                                            OrderStatus.Pending => "Chờ xử lý",
+                                            OrderStatus.Confirmed => "Đã xác nhận",
+                                            OrderStatus.Processing => "Đang xử lý",
+                                            OrderStatus.Shipped => "Đang giao",
+                                            OrderStatus.Delivered => "Đã giao",
+                                            OrderStatus.Cancelled => "Đã hủy",
+                                            _ => order.Status.ToString()
+                                        };
+                                    }
+                                    <span class="badge-status @badgeClass">@statusText</span>
+                                </td>
+                                <td class="text-muted"
+                                    style="border-top:1px solid #f0ede8; font-size:0.75rem;">
+                                    @order.OrderDate.ToString("dd/MM HH:mm")
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                Chưa có đơn hàng nào
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.microsoft.com/ajax/signalr/latest/dist/browser/signalr.min.js"></script>
     <script>
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/orderHub")
-            .build();
+        const gold   = '#C1A35E';
+        const dark   = '#1a1a1a';
+        const gridColor = 'rgba(0,0,0,0.05)';
 
-        connection.on("NewOrder", function(order) {
-            const html = `
-                <div class="alert" style="border-left:4px solid #C1A35E; animation: fadeIn 0.5s;">
-                    🛍️ <strong>Đơn hàng mới #${order.orderId}</strong> từ
-                    <strong>${order.customerName}</strong>
-                    ${order.isGuest ? '(Khách vãng lai)' : '(Thành viên)'} —
-                    ${order.amount.toLocaleString('vi-VN')}đ
-                </div>`;
-            $('#orderNotifications').prepend(html);
+        // Dữ liệu từ server
+        const monthLabels  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                (List<string>)ViewBag.MonthLabels));
+        const monthRevenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                (List<decimal>)ViewBag.MonthRevenue));
+        const monthOrders  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                (List<int>)ViewBag.MonthOrders));
+        const statusCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                (int[])ViewBag.StatusCounts));
+
+        // ===== BIỂU ĐỒ DOANH THU =====
+        new Chart(document.getElementById('revenueChart'), {
+        type: 'line',
+        data: {
+        labels: monthLabels,
+        datasets: [{
+        label: 'Doanh thu (đ)',
+        data: monthRevenue,
+        borderColor: gold,
+        backgroundColor: 'rgba(193,163,94,0.08)',
+        borderWidth: 2,
+        pointBackgroundColor: gold,
+        pointRadius: 4,
+        tension: 0.4,
+        fill: true
+        }]
+        },
+        options: {
+        responsive: true,
+        plugins: {
+        legend: { display: false },
+        tooltip: {
+        callbacks: {
+        label: ctx => ctx.parsed.y.toLocaleString('vi-VN') + 'đ'
+        }
+        }
+        },
+        scales: {
+        y: {
+        beginAtZero: true,
+        grid: { color: gridColor },
+        ticks: {
+        font: { size: 11 },
+        callback: val => val >= 1000000
+        ? (val/1000000).toFixed(1) + 'M'
+        : val >= 1000 ? (val/1000).toFixed(0) + 'K' : val
+        }
+        },
+        x: {
+        grid: { display: false },
+        ticks: { font: { size: 11 } }
+        }
+        }
+        }
         });
 
-        connection.start().then(() => connection.invoke("JoinAdminGroup"))
-                  .catch(err => console.error(err));
+        // ===== BIỂU ĐỒ DONUT KHÁCH HÀNG =====
+        new Chart(document.getElementById('customerChart'), {
+        type: 'doughnut',
+        data: {
+        labels: ['Khách Vãng Lai', 'Thành Viên'],
+        datasets: [{
+        data: [@ViewBag.GuestOrders, @ViewBag.MemberOrders],
+        backgroundColor: [gold, dark],
+        borderWidth: 0,
+        hoverOffset: 4
+        }]
+        },
+        options: {
+        cutout: '68%',
+        plugins: {
+        legend: {
+        position: 'bottom',
+        labels: { font: { size: 11 }, boxWidth: 12, padding: 12 }
+        }
+        }
+        }
+        });
+
+        // ===== BIỂU ĐỒ ĐƠN HÀNG THEO THÁNG =====
+        new Chart(document.getElementById('ordersChart'), {
+        type: 'bar',
+        data: {
+        labels: monthLabels,
+        datasets: [{
+        label: 'Số đơn',
+        data: monthOrders,
+        backgroundColor: monthOrders.map((v, i) =>
+        i === monthOrders.length - 1
+        ? gold
+        : 'rgba(193,163,94,0.3)'),
+        borderRadius: 3,
+        borderWidth: 0
+        }]
+        },
+        options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+        y: {
+        beginAtZero: true,
+        grid: { color: gridColor },
+        ticks: { font: { size: 11 }, stepSize: 1 }
+        },
+        x: {
+        grid: { display: false },
+        ticks: { font: { size: 11 } }
+        }
+        }
+        }
+        });
+
+        // ===== BIỂU ĐỒ TRẠNG THÁI ĐƠN =====
+        new Chart(document.getElementById('statusChart'), {
+        type: 'bar',
+        data: {
+        labels: ['Chờ xử lý','Xác nhận','Đang xử lý','Đang giao','Đã giao','Hủy'],
+        datasets: [{
+        label: 'Đơn hàng',
+        data: statusCounts,
+        backgroundColor: [
+        '#fff3cd','#cce5ff','#e2d9f3',
+        '#d4edda','#d1ecf1','#f8d7da'
+        ],
+        borderColor: [
+        '#856404','#004085','#432874',
+        '#155724','#0c5460','#721c24'
+        ],
+        borderWidth: 1,
+        borderRadius: 3
+        }]
+        },
+        options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+        y: {
+        beginAtZero: true,
+        grid: { color: gridColor },
+        ticks: { font: { size: 11 }, stepSize: 1 }
+        },
+        x: {
+        grid: { display: false },
+        ticks: { font: { size: 10 } }
+        }
+        }
+        }
+        });
+
+        // ===== SIGNALR REAL-TIME =====
+        const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/orderHub").build();
+
+        connection.on("NewOrder", function(order) {
+        const badge = order.isGuest
+        ? '<span style="background:#f0ebe0;color:#C1A35E;font-size:0.62rem;padding:1px 6px;border-radius:10px;">Vãng Lai</span>'
+        : '<span style="background:#e8f0e8;color:#2d6a2d;font-size:0.62rem;padding:1px 6px;border-radius:10px;">Thành Viên</span>';
+
+        const el = document.getElementById('liveOrders');
+        if (el.querySelector('p')) el.innerHTML = '';
+
+        el.insertAdjacentHTML('afterbegin', `
+        <div class="live-item">
+        <div class="d-flex justify-content-between align-items-start">
+        <div>
+        <strong style="color:var(--gold);">#${order.orderId}</strong>
+        <strong class="ms-1">${order.customerName}</strong>
+        ${badge}
+        <div style="color:var(--gold); font-size:0.82rem; margin-top:2px;">
+        ${order.amount.toLocaleString('vi-VN')}đ
+        </div>
+        </div>
+        <small class="text-muted">${new Date().toLocaleTimeString('vi-VN')}</small>
+        </div>
+        </div>`);
+        });
+
+        connection.start()
+        .then(() => connection.invoke("JoinAdminGroup"))
+        .catch(err => console.error('SignalR:', err));
     </script>
 }
