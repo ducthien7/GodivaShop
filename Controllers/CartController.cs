@@ -82,15 +82,34 @@ public class CartController : Controller
     [HttpPost]
     public async Task<IActionResult> ApplyCoupon(string code, decimal total)
     {
-        var coupon = _db.Coupons.FirstOrDefault(c =>
-            c.Code == code && c.IsActive &&
-            (c.ExpiryDate == null || c.ExpiryDate >= DateTime.Now) &&
-            (c.MaxUsageCount == null || c.UsedCount < c.MaxUsageCount) &&
-            (c.MinOrderAmount == null || total >= c.MinOrderAmount));
+        // 1. Tìm mã trong DB
+        var coupon = _db.Coupons.FirstOrDefault(c => c.Code == code && c.IsActive);
 
         if (coupon == null)
-            return Json(new { success = false, message = "Mã giảm giá không hợp lệ" });
+            return Json(new { success = false, message = "Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa." });
 
+        // 2. Kiểm tra hạn sử dụng và số lượt dùng
+        if (coupon.ExpiryDate != null && coupon.ExpiryDate < DateTime.Now)
+            return Json(new { success = false, message = "Mã giảm giá đã hết hạn." });
+
+        if (coupon.MaxUsageCount != null && coupon.UsedCount >= coupon.MaxUsageCount)
+            return Json(new { success = false, message = "Mã giảm giá đã hết lượt sử dụng." });
+
+        if (coupon.MinOrderAmount != null && total < coupon.MinOrderAmount)
+            return Json(new { success = false, message = $"Đơn hàng tối thiểu để áp dụng là {coupon.MinOrderAmount:N0}đ" });
+
+        // 3. KHOÁ BẢO MẬT: Kiểm tra xem mã này có bị gắn với User cụ thể nào không (Mã từ vòng quay)
+        if (!string.IsNullOrEmpty(coupon.UserId))
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // Nếu khách chưa đăng nhập, hoặc ID không khớp với ID lưu trong mã -> Chặn luôn!
+            if (currentUser == null || coupon.UserId != currentUser.Id)
+            {
+                return Json(new { success = false, message = "Mã giảm giá này không thuộc về tài khoản của bạn." });
+            }
+        }
+
+        // 4. Tính toán tiền giảm
         var discount = coupon.DiscountType == DiscountType.Percentage
             ? total * coupon.DiscountValue / 100
             : coupon.DiscountValue;

@@ -105,7 +105,10 @@ namespace GodivaShop.Web.Controllers
                     DiscountType = currentDiscountType, // <--- Đã sửa thành biến tự động
                     DiscountValue = selectedPrize.DiscountValue.Value,
                     IsActive = true,
-                    ExpiryDate = DateTime.Now.AddDays(7) // Hạn dùng 7 ngày
+                    ExpiryDate = DateTime.Now.AddDays(7), // Hạn dùng 7 ngày
+                    MaxUsageCount = 1, // <--- CHỈ DÙNG 1 LẦN
+                    UsedCount = 0,
+                    UserId = userId    // <--- GẮN VÀO TÀI KHOẢN KHÁCH HÀNG
                 };
                 _db.Coupons.Add(coupon);
             }

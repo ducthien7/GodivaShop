@@ -1,4 +1,5 @@
 ﻿using GodivaShop.Web.Data;
+using GodivaShop.Web.Models; // Đảm bảo có thư viện này
 using GodivaShop.Web.Models.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -12,16 +13,15 @@ namespace GodivaShop.Web.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager; // <--- THÊM MỚI
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-        // Cập nhật Constructor để nhận thêm SignInManager
         public ProfileController(ApplicationDbContext db,
                                  UserManager<ApplicationUser> userManager,
-                                 SignInManager<ApplicationUser> signInManager) // <--- THÊM MỚI
+                                 SignInManager<ApplicationUser> signInManager)
         {
             _db = db;
             _userManager = userManager;
-            _signInManager = signInManager; // <--- THÊM MỚI
+            _signInManager = signInManager;
         }
 
         public async Task<IActionResult> Index()
@@ -108,9 +108,6 @@ namespace GodivaShop.Web.Controllers
             return RedirectToAction("Index");
         }
 
-        // ==========================================
-        // CHỨC NĂNG MỚI: XÓA TÀI KHOẢN
-        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteAccount()
@@ -118,8 +115,6 @@ namespace GodivaShop.Web.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound("Không tìm thấy người dùng.");
 
-            // 1. Xử lý các đơn hàng liên quan (để tránh lỗi khóa ngoại trong Database)
-            // Chúng ta gán UserId = null để đơn hàng đó trở thành "Khách vãng lai"
             var orders = await _db.Orders.Where(o => o.UserId == user.Id).ToListAsync();
             foreach (var order in orders)
             {
@@ -127,11 +122,9 @@ namespace GodivaShop.Web.Controllers
             }
             await _db.SaveChangesAsync();
 
-            // 2. Thực hiện xóa User
             var result = await _userManager.DeleteAsync(user);
             if (result.Succeeded)
             {
-                // 3. Đăng xuất ngay lập tức sau khi xóa thành công
                 await _signInManager.SignOutAsync();
                 TempData["SuccessMessage"] = "Tài khoản của bạn đã được xóa thành công.";
                 return RedirectToAction("Index", "Home");
@@ -139,6 +132,30 @@ namespace GodivaShop.Web.Controllers
 
             TempData["ErrorMessage"] = "Không thể xóa tài khoản lúc này.";
             return RedirectToAction("Edit");
+        }
+
+        // ==========================================
+        // CHỨC NĂNG MỚI: XEM KHO VOUCHER CÁ NHÂN
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> MyVouchers()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound("Không tìm thấy người dùng.");
+
+            var now = DateTime.Now;
+
+            // Lấy danh sách các mã giảm giá của User này, 
+            // đảm bảo còn hạn và chưa dùng hết số lượt (UsedCount < MaxUsageCount)
+            var vouchers = await _db.Coupons
+                .Where(c => c.UserId == user.Id &&
+                            c.IsActive &&
+                            (c.ExpiryDate == null || c.ExpiryDate > now) &&
+                            (c.MaxUsageCount == null || c.UsedCount < c.MaxUsageCount))
+                .OrderByDescending(c => c.ExpiryDate) // Sắp xếp cái nào sắp hết hạn lên đầu
+                .ToListAsync();
+
+            return View(vouchers);
         }
     }
 }

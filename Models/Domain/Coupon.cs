@@ -13,4 +13,6 @@ public class Coupon
     public int UsedCount { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public bool IsActive { get; set; } = true;
+   
+    public string? UserId { get; set; }
 }

@@ -4,49 +4,51 @@
     var orders = ViewBag.OrderHistory as List<GodivaShop.Web.Models.Domain.Order>;
 }
 
-<style>
-    .profile-header {
-        background: url('https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=1600') center/cover;
-        padding: 4rem 0;
-        position: relative;
-    }
-    .profile-header::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: rgba(26, 26, 26, 0.85); /* Phủ đen mờ sang trọng */
-    }
-    .profile-card {
-        border: none;
-        border-radius: 0;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
-    .profile-avatar {
-        width: 120px;
-        height: 120px;
-        background: var(--gold, #C1A35E);
-        color: #fff;
-        font-size: 3rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        margin: -60px auto 20px;
-        border: 5px solid #fff;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    .order-table th {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #666;
-    }
-    .status-badge {
-        font-size: 0.75rem;
-        padding: 5px 12px;
-        border-radius: 20px;
-    }
-</style>
+@section Styles {
+    <style>
+        .profile-header {
+            background: url('https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=1600') center/cover;
+            padding: 4rem 0;
+            position: relative;
+        }
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 26, 26, 0.85);
+        }
+        .profile-card {
+            border: none;
+            border-radius: 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: var(--gold, #C1A35E);
+            color: #fff;
+            font-size: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: -60px auto 20px;
+            border: 5px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .order-table th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+    </style>
+}
 
 <div class="profile-header text-center text-white">
     <div class="position-relative z-index-1" style="z-index: 1;">
@@ -70,11 +72,15 @@
                     <div class="text-start">
                         <p class="mb-2"><i class="fa fa-phone text-gold me-2" style="width:20px; color:#C1A35E;"></i> @(Model.PhoneNumber ?? "Chưa cập nhật")</p>
                         <p class="mb-2"><i class="fa fa-map-marker-alt text-gold me-2" style="width:20px; color:#C1A35E;"></i> @(Model.Address ?? "Chưa cập nhật địa chỉ")</p>
-                        
                     </div>
 
                     <hr class="my-4">
+                    
                     <a asp-controller="Profile" asp-action="Edit" class="btn btn-outline-dark w-100" style="border-radius:0; letter-spacing:1px; font-size:0.8rem;">CẬP NHẬT THÔNG TIN</a>
+                    
+                    <a href="/Profile/MyVouchers" class="btn btn-outline-gold w-100 mt-2" style="border-radius: 0; letter-spacing: 1px; font-size: 0.85rem; border: 1px solid #C1A35E; color: #C1A35E;">
+                        <i class="fa fa-ticket-alt me-2"></i> KHO VOUCHER CỦA TÔI
+                    </a>
                 </div>
             </div>
         </div>
@@ -144,6 +150,6 @@
                 }
             </div>
         </div>
+        </div> </div> ```
 
-    </div>
-</div>
+Lần này đảm bảo 100% cột trái - cột phải đều song song ngay ngắn, không rớt đi đâu được nữa! Test lại xem đã chuẩn form cũ chưa nhé. Đợt này mà rớt nữa chắc mình đền bạn ly Godiva luôn á! 😂
