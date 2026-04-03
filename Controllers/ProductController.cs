@@ -80,8 +80,65 @@ public class ProductController : Controller
 
     // AJAX: Thêm vào giỏ
     [HttpPost]
-    public IActionResult AddToCart([FromBody] CartItem item)
+    public async Task<IActionResult> AddToCart([FromBody] CartItem item)
     {
+        int stockQuantity = 0;
+
+        // 1. NẾU KHÁCH CHỌN BIẾN THỂ (SIZE / SỐ LƯỢNG VIÊN)
+        if (item.VariantId.HasValue && item.VariantId > 0)
+        {
+            var variant = await _db.ProductVariants.FindAsync(item.VariantId);
+            if (variant == null) return Json(new { success = false, message = "Biến thể không tồn tại." });
+
+            // Lấy tồn kho chuẩn từ bảng ProductVariant
+            stockQuantity = variant.StockQuantity;
+        }
+        else
+        {
+            // 2. NẾU KHÁCH MUA SẢN PHẨM GỐC (CHƯA CHỌN BIẾN THỂ)
+            var product = await _db.Products
+                                   .Include(p => p.Variants)
+                                   .FirstOrDefaultAsync(p => p.Id == item.ProductId);
+
+            if (product == null) return Json(new { success = false, message = "Sản phẩm không tồn tại." });
+
+            // Nếu sản phẩm đó CÓ CÀI ĐẶT biến thể mà khách chưa chọn -> Ép khách phải chọn
+            if (product.Variants != null && product.Variants.Any(v => v.IsActive))
+            {
+                return Json(new { success = false, message = "Vui lòng chọn phân loại sản phẩm (kích thước/số lượng)!" });
+            }
+
+            // Nếu sản phẩm ĐƠN GIẢN (không có biến thể), vì bảng Product của bạn chưa có cột tồn kho
+            // -> Mình tạm set 999 để cho qua. (Sau này nếu muốn, bạn thêm public int StockQuantity vào Product.cs sau nhé).
+            stockQuantity = 999;
+        }
+
+        // 3. KIỂM TRA SỐ LƯỢNG ĐÃ CÓ TRONG GIỎ
+        var cartItems = _cart.GetCart();
+        var existingItem = cartItems.FirstOrDefault(c => c.ProductId == item.ProductId && c.VariantId == item.VariantId);
+
+        int currentInCart = existingItem != null ? existingItem.Quantity : 0;
+        int totalRequested = currentInCart + item.Quantity;
+
+        // 4. CHẶN ĐỨNG NẾU LỐ TỒN KHO
+        if (totalRequested > stockQuantity)
+        {
+            if (currentInCart > 0)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = $"Kho chỉ còn {stockQuantity} hộp. Bạn đã có sẵn {currentInCart} hộp trong giỏ rồi nhé!"
+                });
+            }
+            return Json(new
+            {
+                success = false,
+                message = $"Rất tiếc! Số lượng tồn kho hiện tại chỉ còn {stockQuantity} hộp."
+            });
+        }
+
+        // 5. VƯỢT QUA CỬA ẢI THÌ CHO VÀO GIỎ
         _cart.AddItem(item);
         return Json(new { success = true, cartCount = _cart.GetCartCount() });
     }
