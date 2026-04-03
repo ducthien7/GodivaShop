@@ -92,23 +92,35 @@
                         <div class="mt-1"></div>
                         
                         @if (order.PaymentMethod == "VNPAY" && order.IsPaid)
-                        {
-                            <span class="badge" style="background-color: #005aab; font-size: 0.7rem;">
-                                <i class="fa fa-credit-card me-1"></i> VNPay (Đã TT)
-                            </span>
-                        }
-                        else if (order.PaymentMethod == "VNPAY" && !order.IsPaid)
-                        {
-                            <span class="badge bg-danger" style="font-size: 0.7rem;">
-                                <i class="fa fa-times-circle me-1"></i> VNPay (Lỗi)
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary" style="font-size: 0.7rem;">
-                                <i class="fa fa-money-bill-wave me-1"></i> COD
-                            </span>
-                        }
+{
+    <span class="badge" style="background-color: #005aab; font-size: 0.7rem;">
+        <i class="fa fa-credit-card me-1"></i> VNPay (Đã TT)
+    </span>
+}
+else if (order.PaymentMethod == "VNPAY" && !order.IsPaid)
+{
+    <span class="badge bg-danger" style="font-size: 0.7rem;">
+        <i class="fa fa-times-circle me-1"></i> VNPay (Lỗi)
+    </span>
+}
+else if (order.PaymentMethod == "VIETQR" && order.IsPaid)
+{
+    <span class="badge" style="background-color: #27ae60; font-size: 0.7rem;">
+        <i class="fa fa-qrcode me-1"></i> VietQR (Đã TT)
+    </span>
+}
+else if (order.PaymentMethod == "VIETQR" && !order.IsPaid)
+{
+    <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">
+        <i class="fa fa-qrcode me-1"></i> VietQR (Chưa TT)
+    </span>
+}
+else
+{
+    <span class="badge bg-secondary" style="font-size: 0.7rem;">
+        <i class="fa fa-money-bill-wave me-1"></i> COD
+    </span>
+}
                     </td>
                     
                     <td class="text-muted" style="font-size:0.8rem;">@order.OrderDate.ToString("dd/MM/yy HH:mm")</td>
