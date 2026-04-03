@@ -43,16 +43,16 @@
             margin-bottom: 1.5rem;
         }
         .payment-methods .form-check-input:checked {
-    background-color: var(--gold);
-    border-color: var(--gold);
-}
-.payment-methods .form-check {
-    cursor: pointer;
-    padding-left: 2.5rem;
-}
-.payment-methods .form-check-label {
-    cursor: pointer;
-}
+            background-color: var(--gold);
+            border-color: var(--gold);
+        }
+        .payment-methods .form-check {
+            cursor: pointer;
+            padding-left: 2.5rem;
+        }
+        .payment-methods .form-check-label {
+            cursor: pointer;
+        }
     </style>
 }
 
@@ -79,7 +79,6 @@
     }
 
     <div class="row g-5">
-        <!-- CỘT TRÁI: FORM -->
         <div class="col-lg-7">
 
             @if (!User.Identity!.IsAuthenticated)
@@ -124,7 +123,7 @@
                     <div class="col-md-6">
                         <label asp-for="Email" class="form-label">Email *</label>
                         <input asp-for="Email" class="form-control"
-                              required placeholder="your@email.com">
+                               required placeholder="your@email.com">
                         <span asp-validation-for="Email"
                               class="text-danger" style="font-size:0.75rem;"></span>
                     </div>
@@ -132,7 +131,7 @@
                     <div class="col-md-6">
                         <label asp-for="Phone" class="form-label">Số Điện Thoại *</label>
                         <input asp-for="Phone" class="form-control"
-                             required  placeholder="0912 345 678">
+                               required  placeholder="0912 345 678">
                         <span asp-validation-for="Phone"
                               class="text-danger" style="font-size:0.75rem;"></span>
                     </div>
@@ -142,7 +141,7 @@
                             Địa Chỉ Giao Hàng *
                         </label>
                         <input asp-for="ShippingAddress" class="form-control"
-                              required placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành">
+                               required placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành">
                         <span asp-validation-for="ShippingAddress"
                               class="text-danger" style="font-size:0.75rem;"></span>
                     </div>
@@ -153,7 +152,6 @@
                                   placeholder="Ghi chú cho đơn hàng (không bắt buộc)"></textarea>
                     </div>
 
-                    <!-- MÃ GIẢM GIÁ -->
                     <div class="col-12">
                         <label class="form-label">Mã Giảm Giá</label>
                         <div class="input-group">
@@ -173,51 +171,51 @@
                 </div>
 
                 <div class="col-12 mt-4">
-    <p class="step-header">
-        <i class="fa fa-credit-card me-2 text-gold"></i>
-        Phương Thức Thanh Toán
-    </p>
-    <div class="payment-methods p-3" style="border: 1px solid #e0e0e0; background: #fafafa;">
-        
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payCOD" value="COD" checked>
-            <label class="form-check-label d-flex align-items-center" for="payCOD">
-                <i class="fa fa-truck text-muted me-2 text-center" style="width: 25px; font-size: 1.2rem;"></i>
-                <div>
-                    <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán khi nhận hàng (COD)</span>
-                    <small class="text-muted" style="font-size: 0.75rem;">Thanh toán bằng tiền mặt khi shipper giao hàng đến.</small>
+                    <p class="step-header">
+                        <i class="fa fa-credit-card me-2 text-gold"></i>
+                        Phương Thức Thanh Toán
+                    </p>
+                    <div class="payment-methods p-3" style="border: 1px solid #e0e0e0; background: #fafafa;">
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payCOD" value="COD" checked>
+                            <label class="form-check-label d-flex align-items-center" for="payCOD">
+                                <i class="fa fa-truck text-muted me-2 text-center" style="width: 25px; font-size: 1.2rem;"></i>
+                                <div>
+                                    <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán khi nhận hàng (COD)</span>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Thanh toán bằng tiền mặt khi shipper giao hàng đến.</small>
+                                </div>
+                            </label>
+                        </div>
+
+                        <hr style="border-color: #eee;">
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payVNPay" value="VNPAY">
+                            <label class="form-check-label d-flex align-items-center" for="payVNPay">
+                                <i class="fa fa-credit-card text-primary me-2 text-center" style="width: 25px; font-size: 1.2rem;"></i>
+                                <div>
+                                    <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán qua VNPay</span>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Thanh toán nhanh chóng qua QR Code hoặc thẻ ATM/Quốc tế.</small>
+                                </div>
+                            </label>
+                        </div>
+
+                        <hr style="border-color: #eee;">
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payVietQR" value="VIETQR">
+                            <label class="form-check-label d-flex align-items-center" for="payVietQR">
+                                <i class="fa fa-qrcode text-success me-2 text-center" style="width: 25px; font-size: 1.3rem;"></i>
+                                <div>
+                                    <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán qua VietQR</span>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Quét mã QR bằng ứng dụng ngân hàng (miễn phí giao dịch).</small>
+                                </div>
+                            </label>
+                        </div>
+
+                    </div>
                 </div>
-            </label>
-        </div>
-
-        <hr style="border-color: #eee;">
-
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payVNPay" value="VNPAY">
-            <label class="form-check-label d-flex align-items-center" for="payVNPay">
-                <i class="fa fa-credit-card text-primary me-2 text-center" style="width: 25px; font-size: 1.2rem;"></i>
-                <div>
-                    <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán qua VNPay</span>
-                    <small class="text-muted" style="font-size: 0.75rem;">Thanh toán nhanh chóng qua QR Code hoặc thẻ ATM/Quốc tế.</small>
-                </div>
-            </label>
-        </div>
-
-        <hr style="border-color: #eee;">
-
-        <div class="form-check">
-            <input class="form-check-input" type="radio" asp-for="PaymentMethod" id="payVietQR" value="VIETQR">
-            <label class="form-check-label d-flex align-items-center" for="payVietQR">
-                <i class="fa fa-qrcode text-success me-2 text-center" style="width: 25px; font-size: 1.3rem;"></i>
-                <div>
-                    <span class="d-block fw-semibold" style="font-size: 0.85rem;">Thanh toán qua VietQR</span>
-                    <small class="text-muted" style="font-size: 0.75rem;">Quét mã QR bằng ứng dụng ngân hàng (miễn phí giao dịch).</small>
-                </div>
-            </label>
-        </div>
-
-    </div>
-</div>
 
 
                 <button type="submit"
@@ -233,7 +231,6 @@
             </form>
         </div>
 
-        <!-- CỘT PHẢI: TÓM TẮT -->
         <div class="col-lg-5">
             <div class="order-summary">
                 <p class="step-header">
@@ -277,12 +274,25 @@
 
                 <div class="summary-item">
                     <span class="text-muted">Tạm tính:</span>
-                    <span>@Model.TotalAmount.ToString("N0")đ</span>
+                    <span>@Model.CartItems.Sum(x => x.Subtotal).ToString("N0")đ</span>
                 </div>
+                
                 <div class="summary-item">
                     <span class="text-muted">Phí vận chuyển:</span>
-                    <span class="text-success">Miễn phí</span>
+                    @if (ViewBag.ShippingFee != null && (decimal)ViewBag.ShippingFee == 0)
+                    {
+                        <span class="text-success">Miễn phí</span>
+                    }
+                    else if (ViewBag.ShippingFee != null)
+                    {
+                        <span>@(((decimal)ViewBag.ShippingFee).ToString("N0"))đ</span>
+                    }
+                    else 
+                    {
+                        <span>0đ</span>
+                    }
                 </div>
+
                 <div class="summary-item text-success"
                      id="discountRow" style="display:none;">
                     <span>Giảm giá:</span>
@@ -308,8 +318,10 @@
 
     <partial name="_ValidationScriptsPartial" />
     <script>
-        let totalAmount  = @Model.TotalAmount;
-        let discountAmt  = 0;
+        let subTotal = @Model.CartItems.Sum(x => x.Subtotal);
+        let shippingFee = @(ViewBag.ShippingFee ?? 0);
+        let totalAmount = subTotal + shippingFee; 
+        let discountAmt = 0;
 
         function applyCoupon() {
             const code = document.getElementById('couponInput').value.trim();
@@ -322,7 +334,7 @@
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'RequestVerificationToken': token
                 },
-                body: `code=${encodeURIComponent(code)}&total=${totalAmount}`
+                body: `code=${encodeURIComponent(code)}&total=${subTotal}`
             })
             .then(r => r.json())
             .then(res => {
@@ -335,8 +347,10 @@
                     document.getElementById('discountRow').style.display = 'flex';
                     document.getElementById('discountDisplay').textContent =
                         '-' + discountAmt.toLocaleString('vi-VN') + 'đ';
+                        
+                    let finalPrice = totalAmount - discountAmt;
                     document.getElementById('finalTotal').textContent =
-                        (totalAmount - discountAmt).toLocaleString('vi-VN') + 'đ';
+                        finalPrice.toLocaleString('vi-VN') + 'đ';
                 } else {
                     msgEl.innerHTML =
                         `<span class="text-danger"><i class="fa fa-times me-1"></i>${res.message}</span>`;

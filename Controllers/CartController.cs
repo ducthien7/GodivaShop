@@ -18,7 +18,7 @@ public class CartController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly EmailService _emailService;
     private readonly IHubContext<OrderHub> _hubContext;
-    private readonly IConfiguration _configuration; // Thêm config để đọc appsettings
+    private readonly IConfiguration _configuration;
 
     public CartController(CartService cart, ApplicationDbContext db,
         UserManager<ApplicationUser> userManager, EmailService emailService,
@@ -57,7 +57,13 @@ public class CartController : Controller
     {
         ViewBag.CartCount = _cart.GetCartCount();
         var vm = new CheckoutViewModel { CartItems = _cart.GetCart() };
-        vm.TotalAmount = vm.CartItems.Sum(x => x.Subtotal);
+
+        // TÍNH PHÍ SHIP
+        decimal subTotal = vm.CartItems.Sum(x => x.Subtotal);
+        decimal shippingFee = subTotal >= 500000 ? 0 : 30000; // Dưới 500k phí 30k, ngược lại freeship
+
+        ViewBag.ShippingFee = shippingFee; // Truyền phí ship ra ngoài View
+        vm.TotalAmount = subTotal + shippingFee; // Tổng tiền = Tạm tính + Phí ship
 
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -104,7 +110,10 @@ public class CartController : Controller
         // Lưu thông tin vào Session
         HttpContext.Session.SetString("CheckoutInfo", JsonConvert.SerializeObject(vm));
 
-        decimal totalAmount = cartItems.Sum(x => x.Subtotal);
+        // TÍNH PHÍ SHIP VÀ TỔNG TIỀN
+        decimal subTotal = cartItems.Sum(x => x.Subtotal);
+        decimal shippingFee = subTotal >= 500000 ? 0 : 30000;
+        decimal totalAmount = subTotal + shippingFee;
         decimal discountAmount = 0;
 
         if (!string.IsNullOrEmpty(vm.CouponCode))
@@ -112,12 +121,14 @@ public class CartController : Controller
             var coupon = _db.Coupons.FirstOrDefault(c => c.Code == vm.CouponCode && c.IsActive);
             if (coupon != null)
             {
+                // Lưu ý: Giảm giá % chỉ áp dụng trên tiền hàng (subTotal), không giảm tiền ship
                 discountAmount = coupon.DiscountType == DiscountType.Percentage
-                    ? totalAmount * coupon.DiscountValue / 100
+                    ? subTotal * coupon.DiscountValue / 100
                     : coupon.DiscountValue;
             }
         }
 
+        ViewBag.ShippingFee = shippingFee;
         ViewBag.TotalAmount = totalAmount;
         ViewBag.DiscountAmount = discountAmount;
         ViewBag.FinalAmount = totalAmount - discountAmount;
@@ -142,6 +153,10 @@ public class CartController : Controller
             var vm = JsonConvert.DeserializeObject<CheckoutViewModel>(checkoutInfoJson);
             if (vm == null) return RedirectToAction("Checkout");
 
+            // TÍNH PHÍ SHIP
+            decimal subTotal = cartItems.Sum(x => x.Subtotal);
+            decimal shippingFee = subTotal >= 500000 ? 0 : 30000;
+
             // TẠO ĐƠN HÀNG
             var order = new Order
             {
@@ -151,7 +166,7 @@ public class CartController : Controller
                 ShippingAddress = vm.ShippingAddress,
                 Note = vm.Note,
                 CouponCode = vm.CouponCode,
-                TotalAmount = cartItems.Sum(x => x.Subtotal),
+                TotalAmount = subTotal + shippingFee,
                 PaymentMethod = vm.PaymentMethod,
                 IsPaid = false,
                 OrderDate = DateTime.Now,
@@ -165,7 +180,7 @@ public class CartController : Controller
                 if (coupon != null)
                 {
                     order.DiscountAmount = coupon.DiscountType == DiscountType.Percentage
-                        ? order.TotalAmount * coupon.DiscountValue / 100
+                        ? subTotal * coupon.DiscountValue / 100
                         : coupon.DiscountValue;
                     coupon.UsedCount++;
                 }
